@@ -1,0 +1,314 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Client {
+  Id                      Int             @id @default(autoincrement())
+  Name                    String
+  Address                 String?
+  City                    String?
+  PhoneNumber             String?
+  TaxIdentificationNumber String?
+  User                    User            @relation(fields: [CreatedBy], references: [Id])
+  IsDelete                Boolean         @default(false)
+  CreatedBy               Int
+  CreatedDate             DateTime        @default(now())
+  Contact                 ClientContact[]
+  CodeProject             CodeProject[]
+}
+
+model ClientContact {
+  Id          Int      @id @default(autoincrement())
+  Name        String
+  Position    String
+  PhoneNumber String
+  Email       String
+  CreatedBy   Int
+  CreatedDate DateTime @default(now())
+  Client      Client   @relation(fields: [ClientId], references: [Id])
+  ClientId    Int
+  User        User     @relation(fields: [CreatedBy], references: [Id])
+}
+
+model CodeProject {
+  Id            Int       @id @default(autoincrement())
+  Name          String
+  ClientId      Int
+  CreatedBy     Int
+  CreatedDate   DateTime  @default(now())
+  ConfirmedDate DateTime?
+  ConfirmedBy   Int?
+  Address       String
+  DocumentName  String
+  IsCompleted   Boolean   @default(false)
+  CompletedDate DateTime?
+  CompletedBy   Int?
+  IsDelete      Boolean   @default(false)
+
+  Client              Client                @relation(fields: [ClientId], references: [Id])
+  User1               User                  @relation("User1", fields: [CreatedBy], references: [Id])
+  User2               User?                 @relation("User2", fields: [ConfirmedBy], references: [Id])
+  User3               User?                 @relation("User3", fields: [CompletedBy], references: [Id])
+  CodeProjectDocument CodeProjectDocument[]
+  CodeProjectUser     CodeProjectUser[]
+  CodeReport          CodeReport[]
+  Project             Project[]
+}
+
+model CodeProjectDocument {
+  Id            Int      @id @default(autoincrement())
+  Name          String
+  Url           String
+  CodeProjectId Int
+  CreatedBy     Int
+  CreatedDate   DateTime @default(now())
+
+  User        User        @relation(fields: [CreatedBy], references: [Id])
+  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+}
+
+model CodeProjectUser {
+  Id            Int @id @default(autoincrement())
+  UserId        Int
+  CodeProjectId Int
+
+  User        User        @relation(fields: [UserId], references: [Id])
+  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+}
+
+model CodeReport {
+  Id            Int      @id @default(autoincrement())
+  CreatedBy     Int
+  CreatedDate   DateTime @default(now())
+  Date          DateTime
+  CodeProjectId Int
+  Type          Int
+  IsDelete      Boolean  @default(false)
+  Note          String
+
+  User        User        @relation(fields: [CreatedBy], references: [Id])
+  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+
+  CodeReportApproval        CodeReportApproval[]   @relation("codeReportApproval")
+  CodeReportApprovalComment CodeReportApproval[]   @relation("codeReportApprovalComment")
+  DailyReportImage          DailyReportImage[]
+  DailyTask                 DailyTask[]
+  StatusReport              StatusReport?
+  Tool                      Tool[]
+  Weather                   Weather?
+  Material                  Material[]
+  Worker                    Worker[]
+  RequestForInformation     RequestForInformation?
+}
+
+model CodeReportApproval {
+  Id           Int      @id @default(autoincrement())
+  CodeReportId Int
+  CreatedBy    Int
+  CreatedDate  DateTime @default(now())
+  Comment      String
+  Approval     Int
+  IsDelete     Boolean  @default(false)
+
+  CodeReport        CodeReport @relation("codeReportApproval", fields: [CodeReportId], references: [Id])
+  CodeReportComment CodeReport @relation("codeReportApprovalComment", fields: [CodeReportId], references: [Id])
+  User              User       @relation(fields: [CreatedBy], references: [Id])
+}
+
+model DailyReportImage {
+  Id           Int    @id @default(autoincrement())
+  CodeReportId Int
+  ImageUrl     String
+  Name         String
+  Caption      String
+
+  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+}
+
+model DailyTask {
+  Id           Int    @id @default(autoincrement())
+  Name         String
+  Description  String
+  Unit         String
+  Quantity     Float
+  ParentId     Int
+  CodeReportId Int
+  Note         String
+
+  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+}
+
+model Material {
+  Id           Int    @id @default(autoincrement())
+  Name         String
+  Quantity     Float
+  Status       Int
+  Description  String
+  Unit         String
+  CodeReportId Int
+
+  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+}
+
+model Project {
+  Id                Int     @id @default(autoincrement())
+  Name              String
+  BudgetPrice       Float
+  Quantity          Float
+  Done              Float
+  IsDelete          Boolean @default(false)
+  CodeProjectId     Int
+  ParentId          Int
+  EstimatedDuration Float
+  Timeline          Int
+  Price             Float
+  Description       String
+  Unit              String
+
+  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+}
+
+model ProjectTask {
+  Id          Int      @id @default(autoincrement())
+  Name        String
+  Description String
+  ParentId    Int
+  CreatedBy   Int
+  CreatedDate DateTime @default(now())
+
+  User User @relation(fields: [CreatedBy], references: [Id])
+}
+
+model RequestForInformation {
+  Id           Int     @id @default(autoincrement())
+  CodeReportId Int
+  Description  String
+  Header       String
+  AddressedFor String
+  IsDelete     Boolean @default(false)
+
+  CodeReport                    CodeReport                      @relation(fields: [CodeReportId], references: [Id])
+  RequestForInformationAnswer   RequestForInformationAnswer[]
+  RequestForInformationDocument RequestForInformationDocument[]
+}
+
+model RequestForInformationAnswer {
+  Id                      Int      @id @default(autoincrement())
+  Answer                  String
+  CreatedBy               Int
+  CreatedDate             DateTime
+  RequestForInformationId Int
+  IsDelete                Boolean  @default(false)
+
+  User                  User                  @relation(fields: [CreatedBy], references: [Id])
+  RequestForInformation RequestForInformation @relation(fields: [RequestForInformationId], references: [Id])
+}
+
+model RequestForInformationDocument {
+  Id                      Int    @id @default(autoincrement())
+  RequestForInformationId Int
+  ImageUrl                String
+  Name                    String
+
+  RequestForInformation RequestForInformation @relation(fields: [RequestForInformationId], references: [Id])
+}
+
+model StatusReport {
+  Id           Int    @id @default(autoincrement())
+  Status       String
+  CodeReportId Int
+
+  CodeReport        CodeReport          @relation(fields: [CodeReportId], references: [Id])
+  StatusReportImage StatusReportImage[]
+}
+
+model StatusReportImage {
+  Id             Int    @id @default(autoincrement())
+  StatusReportId Int
+  ImageUrl       String
+  Name           String
+
+  StatusReport StatusReport @relation(fields: [StatusReportId], references: [Id])
+}
+
+model Tool {
+  Id           Int    @id @default(autoincrement())
+  Name         String
+  Description  String
+  Quantity     Int
+  CodeReportId Int
+
+  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+}
+
+model Weather {
+  Id           Int @id @default(autoincrement())
+  WeatherId    Int
+  CodeReportId Int
+
+  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+}
+
+model Worker {
+  Id           Int    @id @default(autoincrement())
+  Name         String
+  CodeReportId Int
+  Quantity     Int
+
+  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+}
+
+model UserContact {
+  Id                Int     @id @default(autoincrement())
+  PhoneNumber       String
+  UserId            Int
+  WhatsappAvailable Boolean
+
+  User User @relation(fields: [UserId], references: [Id])
+}
+
+model UserPosition {
+  Id            Int      @id @default(autoincrement())
+  Position      Int
+  EffectiveDate DateTime
+  CreatedBy     Int
+  CreatedDate   DateTime @default(now())
+  UserId        Int
+
+  User4 User @relation("User4", fields: [CreatedBy], references: [Id])
+  User5 User @relation("User5", fields: [UserId], references: [Id])
+}
+
+model User {
+  Id           Int     @id @default(autoincrement())
+  Email        String  @unique
+  FirstName    String
+  LastName     String
+  IsActive     Boolean @default(true)
+  Password     String?
+  ImageUrl     String?
+  ThumbnailUrl String?
+
+  Client                      Client[]
+  ClientContact               ClientContact[]
+  CodeProjectDocument         CodeProjectDocument[]
+  CreateCodeProject           CodeProject[]                 @relation("User1")
+  ConfirmedCodeProject        CodeProject[]                 @relation("User2")
+  CompletedCodeProject        CodeProject[]                 @relation("User3")
+  CodeProjectUser             CodeProjectUser[]
+  CodeReport                  CodeReport[]
+  CodeReportApproval          CodeReportApproval[]
+  ProjectTask                 ProjectTask[]
+  RequestForInformationAnswer RequestForInformationAnswer[]
+  CreateUserPosition          UserPosition[]                @relation("User4")
+  UserPosition                UserPosition[]                @relation("User5")
+  UserContact                 UserContact[]
+}
