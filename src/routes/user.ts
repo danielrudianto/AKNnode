@@ -203,11 +203,32 @@ router.post("/profilePicture", (req, res, next) => {
                             },
                             data:{
                                 ImageUrl:'profile/' + (id + "." + ext)
+                            },
+                            include:{
+                                UserPosition: true
                             }
-                        }).then(() => {
-                            fs.unlink(path.join(__dirname, "../img/" + user?.ImageUrl), () => {
-                                res.status(201).json({message: "Profile picture updated"});
-                            });
+                        }).then(user => {
+                            res.status(201).json({message: "Profile picture updated"});
+                            let token = jwt.sign(
+                                {
+                                    FirstName: user?.FirstName,
+                                    LastName: user?.LastName,
+                                    Email: user?.Email,
+                                    IsActive: user?.IsActive,
+                                    ImageUrl: user?.ImageUrl,
+                                    ThumbnailUrl: user?.ThumbnailUrl,
+                                    Position: user?.UserPosition[0]
+                                }, fs.readFileSync(path.resolve(__dirname, "../private.key")),
+                                { 
+                                    algorithm: 'RS256',
+                                    expiresIn: "30 days",
+                                }
+                            )
+                            const io = req.app.get('socketio');
+                            io.emit('updateToken', {
+                                Email: user?.Email,
+                                Token: token
+                            })
                         }).catch(error => {
                             throw error;
                         })

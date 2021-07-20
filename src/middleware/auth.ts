@@ -16,7 +16,6 @@ const auth = (req: any, res: any, next: any) => {
             { algorithms: ['RS256'] },
             (err, decoded) => {
                 if(err){
-                    console.log(err);
                     return res.status(401).json({message: "Invalid token"})
                 } else {
                     prisma.user.findUnique({

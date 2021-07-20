@@ -16,7 +16,7 @@ router.post("/", async(req, res, next) => {
     });
     form.parse(req, function(err, fields, files) {
         const fileLength    = parseInt(fields.Files.toString());
-        const progress      = fields.progress;
+        const progress      = fields.Progress;
         const projectId     = parseInt(fields.ProjectId.toString());
         const createdBy     = fields.CreatedBy.toString();
 

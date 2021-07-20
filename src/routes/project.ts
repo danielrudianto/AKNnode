@@ -11,47 +11,37 @@ const router = Router();
 
 router.get("/", async(req, res, next) => {
     const email = req.query.email;
-
-    try{
-        const result = await prisma.$queryRaw(
-            'SELECT codeProject.*, client.Name AS clientName, client.Id AS clientId, client.Address AS clientAddress, client.City AS clientCity, client.TaxIdentificationNumber AS clientTaxIdentificationNumber FROM codeProject JOIN codeProjectUser ON codeProjectUser.CodeProjectId = codeProject.Id JOIN user ON codeProjectUser.UserId = user.Id JOIN client ON codeProject.ClientId = client.Id WHERE user.Email = ? AND codeProject.IsDelete = 0 AND codeProject.IsCompleted = 0 AND codeProject.ConfirmedBy IS NOT NULL',
-            email
-        );
-
-        const response: any[] = [];
-
-        result.forEach((project: any) => {
-            const projectObject: any = {
-                Id: project.Id,
-                CreatedBy: project.CreatedBy,
-                CreatedDate: project.CreatedDate,
-                ClientId: project.ClientId,
-                Name: project.Name,
-                ConfirmedDate: project.ConfirmedDate,
-                Address: project.Address,
-                ConfirmedBy: project.ConfirmedBy,
-                DocumentName: project.DocumentName,
-                IsCompleted: project.IsCompleted,
-                IsDelete: project.IsDelete,
-                CompletedDate: project.CompletedDate,
-                CompletedBy: project.CompletedBy,
-                Client: {
-                    Id: project.clientId,
-                    Name: project.clientName,
-                    Address: project.clientAddress,
-                    City: project.clientCity,
-                    TaxIdentificationNumber: project.clientTaxIdentificationNumber
+    prisma.codeProject.findMany({
+        include:{
+            Client:{
+                select:{
+                    Name: true,
+                    Id: true,
+                    Address: true,
+                    City: true,
+                    TaxIdentificationNumber: true
                 }
             }
-
-            response.push(projectObject);
-        });
-
-        res.status(200).json(response);
-
-    } catch(error){
+        },
+        where:{
+            CodeProjectUser:{
+                some:{
+                    User:{
+                        Email: email?.toString()
+                    }
+                }
+            },
+            IsDelete: false,
+            IsCompleted: false,
+            ConfirmedBy:{
+                not:null
+            }
+        }
+    }).then(result => {
+        res.status(200).json(result);
+    }).catch(error => {
         throw error;
-    }
+    })
 });
 
 router.get("/active", (req, res, next) => {
@@ -240,6 +230,10 @@ router.post('/confirm', (req, res, next) => {
                     }
                 }).then(() => {
                     res.status(201).json({message: "Project confirmed"});
+                    const io = req.app.get('socketio')
+                    io.emit('newProject', {
+                        projectId: project!.Id,
+                    })
                 }).catch(error => {
                     throw error;
                 })

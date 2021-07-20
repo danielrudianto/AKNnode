@@ -12,6 +12,8 @@ import reportWeather from './routes/reportWeather';
 import reportWorker from './routes/reportWorker';
 import reportMaterial from './routes/reportMaterial';
 import reportTool from './routes/reportTool';
+import reportDaily from './routes/reportDaily';
+
 import project from './routes/project';
 import reportStatus from './routes/reportStatus';
 import userContactRoutes from './routes/userContact';
@@ -24,12 +26,39 @@ import donwloadRoutes from './middleware/download';
 
 const app = express();
 app.set("port", 3000);
-app.use(cors());
+app.use(cors())
+// const allowedOrigins = [
+//     'http://localhost:4200',
+//     'http://app.aknsmartreport.com',
+//     'http://www.app.aknsmartreport.com',
+// ];
+
+// const options: cors.CorsOptions = {
+//     allowedHeaders: [
+//       'Origin',
+//       'X-Requested-With',
+//       'Content-Type',
+//       'Accept',
+//       'X-Access-Token',
+//     ],
+//     credentials: false,
+//     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
+//     origin: function (origin, callback) {
+//         if (allowedOrigins.indexOf(origin!) !== -1) {
+//             callback(null, true)
+//         } else {
+//             callback(new Error('Not allowed by CORS'))
+//         }
+//     },
+//     preflightContinue: false,
+//   };
+
+// app.use(cors(options));
 
 const http = require("http").Server(app);
 const io = require("socket.io")(http, {
     cors: {
-        origin: "http://localhost:4200",
+        origin: "*",
         methods: ["GET", "POST"],
     }
 });
@@ -68,6 +97,8 @@ app.use('/reportWeather', auth, reportWeather);
 app.use('/reportMaterial', auth, reportMaterial);
 app.use('/reportWorker', auth, reportWorker);
 app.use('/reportTool', auth, reportTool);
+app.use("/reportDaily", auth, reportDaily)
+
 app.use('/reportStatus', auth, reportStatus);
 app.use('/project', auth, project);
 app.use('/client', auth, clientRoutes);

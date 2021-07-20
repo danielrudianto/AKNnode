@@ -356,4 +356,146 @@ router.get("/:projectId", (req, res, next) => {
     })
 })
 
+router.get("/", (req, res, next) => {
+    const email = req.query.Email;
+    prisma.codeReport.findMany({
+        where:{
+            IsDelete: false,
+            CodeProject:{
+                CodeProjectUser:{
+                    some:{
+                        User:{
+                            Email: email!.toString()
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: {
+            CreatedDate: 'desc'
+        },
+        take: 5,
+        skip: 0,
+        include:{
+            User:{
+                select:{
+                    FirstName: true,
+                    LastName: true,
+                    ImageUrl: true
+                }
+            },
+            Worker:{
+                select:{
+                    Name: true,
+                    Quantity: true
+                }
+            },
+            Tool: {
+                select: {
+                    Name: true,
+                    Description: true,
+                    Quantity: true
+                }
+            },
+            Material:{
+                select: {
+                    Name: true,
+                    Description: true,
+                    Quantity: true,
+                    Unit: true
+                }
+            },
+            StatusReport: {
+                select: {
+                    Status: true,
+                    StatusReportImage: true
+                }
+            },
+            Weather:{
+                select:{
+                    WeatherId: true,
+                }
+            },
+            RequestForInformation: {
+                include: {
+                    RequestForInformationDocument: true,
+                    RequestForInformationAnswer:{
+                        where:{
+                            IsDelete: false
+                        },
+                        select:{
+                            User:{
+                                select: {
+                                    FirstName: true,
+                                    LastName: true,
+                                    Email: true,
+                                    ImageUrl: true
+                                }
+                            },
+                            Answer: true,
+                            CreatedDate: true,
+                        },
+                        orderBy:{
+                            CreatedDate: 'desc'
+                        },
+                        take: 2,
+                        skip: 0
+                    }
+                }
+            },
+            CodeReportApproval:{
+                select:{
+                    User:{
+                        select:{
+                            Email: true
+                        }
+                    },
+                    Approval: true,
+                    CreatedDate: true,
+                    Id: true
+                },
+                orderBy:{
+                    CreatedDate: 'asc'
+                },
+                where:{
+                    NOT:{
+                        Approval: 0
+                    },
+                    IsDelete: false
+                }
+                
+            },
+            CodeReportApprovalComment:{
+                select:{
+                    User:{
+                        select:{
+                            FirstName: true,
+                            LastName: true,
+                            Email: true,
+                            ImageUrl: true
+                        }
+                    },
+                    Approval: true,
+                    CreatedDate: true,
+                    Comment: true,
+                    Id: true
+                },
+                orderBy: {
+                    CreatedDate:'desc'
+                },
+                skip: 0,
+                take: 2,
+                where:{
+                    Approval:0,
+                    IsDelete: false
+                }
+            }
+        }
+    }).then(response => {
+        res.status(200).json(response);
+    }).catch(error => {
+        throw error;
+    })
+});
+
 export default router;

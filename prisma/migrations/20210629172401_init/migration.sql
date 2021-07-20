@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE `user` ADD COLUMN `ImageUrl` VARCHAR(191),
-    ADD COLUMN `IsActive` BOOLEAN NOT NULL DEFAULT true,
-    ADD COLUMN `Password` VARCHAR(191),
-    ADD COLUMN `ThumbnailUrl` VARCHAR(191);
