@@ -1,7 +1,7 @@
 {
-  "name": "aknnode",
-  "version": "1.0.0",
-  "description": "",
+  "name": "AKNAPIService",
+  "version": "1.1.0",
+  "description": "PT Alpha Konstruksi Nusantara Reporting Application API",
   "main": "dist/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
