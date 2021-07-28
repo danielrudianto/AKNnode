@@ -18,6 +18,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
@@ -26,6 +29,7 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const formidable = __importStar(require("formidable"));
 const uuid = __importStar(require("uuid"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma = new client_1.PrismaClient();
 const router = express_1.Router();
 router.get("/profile", (req, res, next) => {
@@ -237,6 +241,97 @@ router.post("/profilePicture", (req, res, next) => {
                 }
             });
         });
+    });
+});
+router.put("/", (req, res, next) => {
+    const user = req.body;
+    prisma.user.findUnique({
+        where: {
+            Id: user.Id
+        }
+    }).then(existingUser => {
+        prisma.user.update({
+            where: {
+                Id: user.Id
+            },
+            data: {
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                IsActive: true,
+                Email: user.Email
+            },
+            include: {
+                UserPosition: true
+            }
+        }).then(response => {
+            res.status(201).json({ message: "User updated" });
+            let token = jwt.sign({
+                FirstName: response?.FirstName,
+                LastName: response?.LastName,
+                Email: response?.Email,
+                IsActive: response?.IsActive,
+                ImageUrl: response?.ImageUrl,
+                ThumbnailUrl: response?.ThumbnailUrl,
+                Position: response?.UserPosition[0]
+            }, fs.readFileSync(path.resolve(__dirname, "../private.key")), {
+                algorithm: 'RS256',
+                expiresIn: "30 days",
+            });
+            const io = req.app.get('socketio');
+            io.emit('updateToken', {
+                Email: existingUser.Email,
+                Token: token
+            });
+            io.emit('userEdit', {
+                Id: existingUser.Id
+            });
+        }).catch(error => {
+            throw error;
+        });
+    }).catch(() => {
+        throw Error("User not found");
+    });
+});
+router.delete("/:userId", (req, res, next) => {
+    const id = parseInt(req.params.userId.toString());
+    prisma.user.update({
+        where: {
+            Id: id
+        },
+        data: {
+            IsActive: false
+        },
+        select: {
+            Email: true
+        }
+    }).then(user => {
+        const io = req.app.get('socketio');
+        io.emit('userDelete', {
+            Email: user.Email
+        });
+        io.emit('deleteToken', {
+            Email: user.Email
+        });
+        res.status(201).json({ message: "User deleted" });
+    }).catch(error => {
+        throw error;
+    });
+});
+router.put("/resetPassword", (req, res, next) => {
+    const token = req.headers.authorization?.toString().split(' ')[1];
+    const decoded = jwt.verify(token, fs.readFileSync(path.resolve(__dirname, "../private.key")), { algorithms: ['RS256'] });
+    prisma.user.update({
+        where: {
+            Email: decoded.Email
+        },
+        data: {
+            Password: bcrypt_1.default.hashSync(req.body.Password, 10)
+        }
+    }).then(() => {
+        res.status(201).json({ message: "User password updated" });
+    }).catch(error => {
+        res.status(500).json({ message: error.message });
+        throw error;
     });
 });
 exports.default = router;

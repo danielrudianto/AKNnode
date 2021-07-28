@@ -18,6 +18,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
@@ -25,6 +28,7 @@ const formidable = __importStar(require("formidable"));
 const fs = __importStar(require("fs"));
 const uuid = __importStar(require("uuid"));
 const path = __importStar(require("path"));
+const sharp_1 = __importDefault(require("sharp"));
 const prisma = new client_1.PrismaClient();
 const router = express_1.Router();
 router.post("/", async (req, res, next) => {
@@ -66,19 +70,23 @@ router.post("/", async (req, res, next) => {
                             const fileNameArray = file.name.split(".");
                             const ext = fileNameArray[fileNameArray.length - 1];
                             const uid = uuid.v1();
-                            const newpath = path.join(__dirname, "../img/status/", (uid + "." + ext));
-                            fs.rename(oldpath, newpath, error => {
-                                if (error == null) {
-                                    prisma.statusReportImage.create({
-                                        data: {
-                                            StatusReportId: statusReport.Id,
-                                            ImageUrl: "status/" + uid + "." + ext,
-                                            Name: file.name
-                                        }
-                                    }).catch(error => {
-                                        return res.status(500).json({ message: error.message });
-                                    });
-                                }
+                            sharp_1.default(oldpath).resize({
+                                fit: sharp_1.default.fit.contain,
+                                width: 800
+                            }).toFile(path.join(__dirname, "../img/status/", (uid + "." + ext))).then(() => {
+                                fs.rename(oldpath, path.join(__dirname, "../img/status/", (uid + "." + ext)), error => {
+                                    if (error == null) {
+                                        prisma.statusReportImage.create({
+                                            data: {
+                                                StatusReportId: statusReport.Id,
+                                                ImageUrl: "status/" + uid + "." + ext,
+                                                Name: file.name
+                                            }
+                                        }).catch(error => {
+                                            return res.status(500).json({ message: error.message });
+                                        });
+                                    }
+                                });
                             });
                             if (i == (fileLength - 1)) {
                                 res.status(200).json({ message: "Status report created" });

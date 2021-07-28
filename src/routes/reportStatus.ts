@@ -5,6 +5,7 @@ import * as formidable from 'formidable';
 import * as fs from 'fs';
 import * as uuid from 'uuid';
 import * as path from 'path';
+import sharp from 'sharp';
 
 const prisma = new PrismaClient()
 
@@ -50,21 +51,25 @@ router.post("/", async(req, res, next) => {
                             const fileNameArray = file!.name!.split(".");
                             const ext = fileNameArray[fileNameArray.length - 1];
                             const uid = uuid.v1();
-                            const newpath = path.join(__dirname, "../img/status/", (uid + "." + ext));
-        
-                            fs.rename(oldpath, newpath, error => {
-                                if(error == null){
-                                    prisma.statusReportImage.create({
-                                        data:{
-                                            StatusReportId: statusReport.Id!,
-                                            ImageUrl:"status/" + uid + "." + ext,
-                                            Name: file.name!
-                                        }
-                                    }).catch(error => {
-                                        return res.status(500).json({message: error.message})
-                                    })
-                                }
-                            });
+                            sharp(oldpath).resize({
+                                fit: sharp.fit.contain,
+                                width:800
+                            }).toFile(path.join(__dirname, "../img/status/", (uid + "." + ext))).then(() => {
+                                fs.rename(oldpath, path.join(__dirname, "../img/status/", (uid + "." + ext)), error => {
+                                    if(error == null){
+                                        prisma.statusReportImage.create({
+                                            data:{
+                                                StatusReportId: statusReport.Id!,
+                                                ImageUrl:"status/" + uid + "." + ext,
+                                                Name: file.name!
+                                            }
+                                        }).catch(error => {
+                                            return res.status(500).json({message: error.message})
+                                        })
+                                    }
+                                });
+                            })
+                            
                             
                             if(i == (fileLength - 1)){
                                 res.status(200).json({message: "Status report created"});

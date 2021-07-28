@@ -176,10 +176,12 @@ router.post("/login", async (req, res, next) => {
                 });
             }
             else {
-                return res.status(401).json({ message: "Incorrect username or password" });
+                res.status(404).json({ message: "Incorrect username or password" });
+                throw Error("Incorrect username or password");
             }
         });
     }).catch(error => {
+        res.status(404).json({ message: "User not found" });
         throw Error("User not found");
     });
 });
