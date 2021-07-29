@@ -318,7 +318,7 @@ router.get("/", async(req, res, next) => {
                         fontSize: 10
                     },
                     {
-                        text:report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes() + ":" + report.CreatedDate.getSeconds(),
+                        text:report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
                         bold: false,
                         fontSize: 10
                     }
@@ -331,7 +331,7 @@ router.get("/", async(req, res, next) => {
                         fontSize: 10
                     },
                     {
-                        text:report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes() + ":" + report.CreatedDate.getSeconds(),
+                        text:report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
                         bold: false,
                         fontSize: 10
                     }
@@ -376,7 +376,7 @@ router.get("/", async(req, res, next) => {
                     margin:[0, 10, 0, 10]
                 },
                 {
-                    text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes() + ":" + report.CreatedDate.getSeconds(),
+                    text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
                     fontSize:8,
                     bold: false
                 },
