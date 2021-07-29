@@ -91,33 +91,26 @@ router.post("/register", async(req, res, next) => {
             }
         }
     }).then(user => {
-        const userInfo = user as UserLoginPresentationModel;
-        bcrypt.compare(body.Password, userInfo.Password).then(result => {
-            if(result){
-                let token = jwt.sign(
-                    {
-                        FirstName: user?.FirstName,
-                        LastName: user?.LastName,
-                        Email: user?.Email,
-                        IsActive: user?.IsActive,
-                        ImageUrl: user?.ImageUrl,
-                        ThumbnailUrl: user?.ThumbnailUrl,
-                        Position: user.UserPosition[0]
-                    }, fs.readFileSync(path.resolve(__dirname, "../private.key")),
-                    { 
-                        algorithm: 'RS256',
-                        expiresIn: "30 days",
-                    }
-                )
-
-                res.status(200).json({
-                    token: token,
-                    expiration: new Date().setDate(new Date().getDate() + 30)
-                });
-            } else {
-                res.sendStatus(401);
+        let token = jwt.sign(
+            {
+                FirstName: user?.FirstName,
+                LastName: user?.LastName,
+                Email: user?.Email,
+                IsActive: user?.IsActive,
+                ImageUrl: user?.ImageUrl,
+                ThumbnailUrl: user?.ThumbnailUrl,
+                Position: user.UserPosition[0]
+            }, fs.readFileSync(path.resolve(__dirname, "../private.key")),
+            { 
+                algorithm: 'RS256',
+                expiresIn: "30 days",
             }
-        })
+        )
+
+        res.status(200).json({
+            token: token,
+            expiration: new Date().setDate(new Date().getDate() + 30)
+        });
     }).catch(error => {
         res.sendStatus(401);
     })
