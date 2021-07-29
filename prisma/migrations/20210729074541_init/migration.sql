@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE `Client` (
+CREATE TABLE `client` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `Address` VARCHAR(191),
@@ -14,7 +14,7 @@ CREATE TABLE `Client` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ClientContact` (
+CREATE TABLE `clientContact` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `Position` VARCHAR(191) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE `ClientContact` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `CodeProject` (
+CREATE TABLE `codeProject` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `ClientId` INTEGER NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE `CodeProject` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `CodeProjectDocument` (
+CREATE TABLE `codeProjectDocument` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `Url` VARCHAR(191) NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE `CodeProjectDocument` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `CodeProjectUser` (
+CREATE TABLE `codeProjectUser` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `UserId` INTEGER NOT NULL,
     `CodeProjectId` INTEGER NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE `CodeProjectUser` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `CodeReport` (
+CREATE TABLE `codeReport` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `CreatedBy` INTEGER NOT NULL,
     `CreatedDate` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -82,7 +82,7 @@ CREATE TABLE `CodeReport` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `CodeReportApproval` (
+CREATE TABLE `codeReportApproval` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `CodeReportId` INTEGER NOT NULL,
     `CreatedBy` INTEGER NOT NULL,
@@ -95,7 +95,7 @@ CREATE TABLE `CodeReportApproval` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `DailyReportImage` (
+CREATE TABLE `dailyReportImage` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `CodeReportId` INTEGER NOT NULL,
     `ImageUrl` VARCHAR(191) NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE `DailyReportImage` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `DailyTask` (
+CREATE TABLE `dailyTask` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `Description` VARCHAR(191) NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE `DailyTask` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Material` (
+CREATE TABLE `material` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `Quantity` DOUBLE NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE `Material` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Project` (
+CREATE TABLE `project` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `BudgetPrice` DOUBLE NOT NULL,
@@ -152,7 +152,7 @@ CREATE TABLE `Project` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ProjectTask` (
+CREATE TABLE `projectTask` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `Description` VARCHAR(191) NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE `ProjectTask` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `RequestForInformation` (
+CREATE TABLE `requestForInformation` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `CodeReportId` INTEGER NOT NULL,
     `Description` VARCHAR(191) NOT NULL,
@@ -172,12 +172,12 @@ CREATE TABLE `RequestForInformation` (
     `AddressedFor` VARCHAR(191) NOT NULL,
     `IsDelete` BOOLEAN NOT NULL DEFAULT false,
 
-    UNIQUE INDEX `RequestForInformation_CodeReportId_unique`(`CodeReportId`),
+    UNIQUE INDEX `requestForInformation_CodeReportId_unique`(`CodeReportId`),
     PRIMARY KEY (`Id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `RequestForInformationAnswer` (
+CREATE TABLE `requestForInformationAnswer` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Answer` VARCHAR(191) NOT NULL,
     `CreatedBy` INTEGER NOT NULL,
@@ -189,7 +189,7 @@ CREATE TABLE `RequestForInformationAnswer` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `RequestForInformationDocument` (
+CREATE TABLE `requestForInformationDocument` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `RequestForInformationId` INTEGER NOT NULL,
     `ImageUrl` VARCHAR(191) NOT NULL,
@@ -199,17 +199,17 @@ CREATE TABLE `RequestForInformationDocument` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `StatusReport` (
+CREATE TABLE `statusReport` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Status` VARCHAR(191) NOT NULL,
     `CodeReportId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `StatusReport_CodeReportId_unique`(`CodeReportId`),
+    UNIQUE INDEX `statusReport_CodeReportId_unique`(`CodeReportId`),
     PRIMARY KEY (`Id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `StatusReportImage` (
+CREATE TABLE `statusReportImage` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `StatusReportId` INTEGER NOT NULL,
     `ImageUrl` VARCHAR(191) NOT NULL,
@@ -219,7 +219,7 @@ CREATE TABLE `StatusReportImage` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Tool` (
+CREATE TABLE `tool` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `Description` VARCHAR(191) NOT NULL,
@@ -230,17 +230,17 @@ CREATE TABLE `Tool` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Weather` (
+CREATE TABLE `weather` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `WeatherId` INTEGER NOT NULL,
     `CodeReportId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `Weather_CodeReportId_unique`(`CodeReportId`),
+    UNIQUE INDEX `weather_CodeReportId_unique`(`CodeReportId`),
     PRIMARY KEY (`Id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Worker` (
+CREATE TABLE `worker` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Name` VARCHAR(191) NOT NULL,
     `CodeReportId` INTEGER NOT NULL,
@@ -250,7 +250,7 @@ CREATE TABLE `Worker` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `UserContact` (
+CREATE TABLE `userContact` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `PhoneNumber` VARCHAR(191) NOT NULL,
     `UserId` INTEGER NOT NULL,
@@ -260,7 +260,7 @@ CREATE TABLE `UserContact` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `UserPosition` (
+CREATE TABLE `userPosition` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Position` INTEGER NOT NULL,
     `EffectiveDate` DATETIME(3) NOT NULL,
@@ -272,7 +272,7 @@ CREATE TABLE `UserPosition` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `User` (
+CREATE TABLE `user` (
     `Id` INTEGER NOT NULL AUTO_INCREMENT,
     `Email` VARCHAR(191) NOT NULL,
     `FirstName` VARCHAR(191) NOT NULL,
@@ -282,105 +282,105 @@ CREATE TABLE `User` (
     `ImageUrl` VARCHAR(191),
     `ThumbnailUrl` VARCHAR(191),
 
-    UNIQUE INDEX `User.Email_unique`(`Email`),
+    UNIQUE INDEX `user.Email_unique`(`Email`),
     PRIMARY KEY (`Id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `Client` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `client` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ClientContact` ADD FOREIGN KEY (`ClientId`) REFERENCES `Client`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `clientContact` ADD FOREIGN KEY (`ClientId`) REFERENCES `client`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ClientContact` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `clientContact` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProject` ADD FOREIGN KEY (`ClientId`) REFERENCES `Client`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeProject` ADD FOREIGN KEY (`ClientId`) REFERENCES `client`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProject` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeProject` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProject` ADD FOREIGN KEY (`ConfirmedBy`) REFERENCES `User`(`Id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `codeProject` ADD FOREIGN KEY (`ConfirmedBy`) REFERENCES `user`(`Id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProject` ADD FOREIGN KEY (`CompletedBy`) REFERENCES `User`(`Id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `codeProject` ADD FOREIGN KEY (`CompletedBy`) REFERENCES `user`(`Id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProjectDocument` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeProjectDocument` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProjectDocument` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `CodeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeProjectDocument` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `codeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProjectUser` ADD FOREIGN KEY (`UserId`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeProjectUser` ADD FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeProjectUser` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `CodeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeProjectUser` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `codeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeReport` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeReport` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeReport` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `CodeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeReport` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `codeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeReportApproval` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeReportApproval` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeReportApproval` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeReportApproval` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CodeReportApproval` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `codeReportApproval` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `DailyReportImage` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `dailyReportImage` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `DailyTask` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `dailyTask` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Material` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `material` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Project` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `CodeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `project` ADD FOREIGN KEY (`CodeProjectId`) REFERENCES `codeProject`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProjectTask` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `projectTask` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `RequestForInformation` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `requestForInformation` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `RequestForInformationAnswer` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `requestForInformationAnswer` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `RequestForInformationAnswer` ADD FOREIGN KEY (`RequestForInformationId`) REFERENCES `RequestForInformation`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `requestForInformationAnswer` ADD FOREIGN KEY (`RequestForInformationId`) REFERENCES `requestForInformation`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `RequestForInformationDocument` ADD FOREIGN KEY (`RequestForInformationId`) REFERENCES `RequestForInformation`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `requestForInformationDocument` ADD FOREIGN KEY (`RequestForInformationId`) REFERENCES `requestForInformation`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `StatusReport` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `statusReport` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `StatusReportImage` ADD FOREIGN KEY (`StatusReportId`) REFERENCES `StatusReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `statusReportImage` ADD FOREIGN KEY (`StatusReportId`) REFERENCES `statusReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Tool` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `tool` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Weather` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `weather` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Worker` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `CodeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `worker` ADD FOREIGN KEY (`CodeReportId`) REFERENCES `codeReport`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `UserContact` ADD FOREIGN KEY (`UserId`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `userContact` ADD FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `UserPosition` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `userPosition` ADD FOREIGN KEY (`CreatedBy`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `UserPosition` ADD FOREIGN KEY (`UserId`) REFERENCES `User`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `userPosition` ADD FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`) ON DELETE CASCADE ON UPDATE CASCADE;
