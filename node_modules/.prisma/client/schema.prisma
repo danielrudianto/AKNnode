@@ -10,22 +10,22 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Client {
+model client {
   Id                      Int             @id @default(autoincrement())
   Name                    String
   Address                 String?
   City                    String?
   PhoneNumber             String?
   TaxIdentificationNumber String?
-  User                    User            @relation(fields: [CreatedBy], references: [Id])
+  User                    user            @relation(fields: [CreatedBy], references: [Id])
   IsDelete                Boolean         @default(false)
   CreatedBy               Int
   CreatedDate             DateTime        @default(now())
-  Contact                 ClientContact[]
-  CodeProject             CodeProject[]
+  Contact                 clientContact[]
+  CodeProject             codeProject[]
 }
 
-model ClientContact {
+model clientContact {
   Id          Int      @id @default(autoincrement())
   Name        String
   Position    String
@@ -33,12 +33,12 @@ model ClientContact {
   Email       String
   CreatedBy   Int
   CreatedDate DateTime @default(now())
-  Client      Client   @relation(fields: [ClientId], references: [Id])
+  Client      client   @relation(fields: [ClientId], references: [Id])
   ClientId    Int
-  User        User     @relation(fields: [CreatedBy], references: [Id])
+  User        user     @relation(fields: [CreatedBy], references: [Id])
 }
 
-model CodeProject {
+model codeProject {
   Id            Int       @id @default(autoincrement())
   Name          String
   ClientId      Int
@@ -53,17 +53,17 @@ model CodeProject {
   CompletedBy   Int?
   IsDelete      Boolean   @default(false)
 
-  Client              Client                @relation(fields: [ClientId], references: [Id])
-  User1               User                  @relation("User1", fields: [CreatedBy], references: [Id])
-  User2               User?                 @relation("User2", fields: [ConfirmedBy], references: [Id])
-  User3               User?                 @relation("User3", fields: [CompletedBy], references: [Id])
-  CodeProjectDocument CodeProjectDocument[]
-  CodeProjectUser     CodeProjectUser[]
-  CodeReport          CodeReport[]
-  Project             Project[]
+  Client              client                @relation(fields: [ClientId], references: [Id])
+  User1               user                  @relation("User1", fields: [CreatedBy], references: [Id])
+  User2               user?                 @relation("User2", fields: [ConfirmedBy], references: [Id])
+  User3               user?                 @relation("User3", fields: [CompletedBy], references: [Id])
+  CodeProjectDocument codeProjectDocument[]
+  CodeProjectUser     codeProjectUser[]
+  CodeReport          codeReport[]
+  Project             project[]
 }
 
-model CodeProjectDocument {
+model codeProjectDocument {
   Id            Int      @id @default(autoincrement())
   Name          String
   Url           String
@@ -71,20 +71,20 @@ model CodeProjectDocument {
   CreatedBy     Int
   CreatedDate   DateTime @default(now())
 
-  User        User        @relation(fields: [CreatedBy], references: [Id])
-  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+  User        user        @relation(fields: [CreatedBy], references: [Id])
+  CodeProject codeProject @relation(fields: [CodeProjectId], references: [Id])
 }
 
-model CodeProjectUser {
+model codeProjectUser {
   Id            Int @id @default(autoincrement())
   UserId        Int
   CodeProjectId Int
 
-  User        User        @relation(fields: [UserId], references: [Id])
-  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+  User        user        @relation(fields: [UserId], references: [Id])
+  CodeProject codeProject @relation(fields: [CodeProjectId], references: [Id])
 }
 
-model CodeReport {
+model codeReport {
   Id            Int      @id @default(autoincrement())
   CreatedBy     Int
   CreatedDate   DateTime @default(now())
@@ -94,22 +94,22 @@ model CodeReport {
   IsDelete      Boolean  @default(false)
   Note          String
 
-  User        User        @relation(fields: [CreatedBy], references: [Id])
-  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+  User        user        @relation(fields: [CreatedBy], references: [Id])
+  CodeProject codeProject @relation(fields: [CodeProjectId], references: [Id])
 
-  CodeReportApproval        CodeReportApproval[]   @relation("codeReportApproval")
-  CodeReportApprovalComment CodeReportApproval[]   @relation("codeReportApprovalComment")
-  DailyReportImage          DailyReportImage[]
-  DailyTask                 DailyTask[]
-  StatusReport              StatusReport?
-  Tool                      Tool[]
-  Weather                   Weather?
-  Material                  Material[]
-  Worker                    Worker[]
-  RequestForInformation     RequestForInformation?
+  CodeReportApproval        codeReportApproval[]   @relation("codeReportApproval")
+  CodeReportApprovalComment codeReportApproval[]   @relation("codeReportApprovalComment")
+  DailyReportImage          dailyReportImage[]
+  DailyTask                 dailyTask[]
+  statusReport              statusReport?
+  Tool                      tool[]
+  Weather                   weather?
+  Material                  material[]
+  Worker                    worker[]
+  RequestForInformation     requestForInformation?
 }
 
-model CodeReportApproval {
+model codeReportApproval {
   Id           Int      @id @default(autoincrement())
   CodeReportId Int
   CreatedBy    Int
@@ -118,22 +118,22 @@ model CodeReportApproval {
   Approval     Int
   IsDelete     Boolean  @default(false)
 
-  CodeReport        CodeReport @relation("codeReportApproval", fields: [CodeReportId], references: [Id])
-  CodeReportComment CodeReport @relation("codeReportApprovalComment", fields: [CodeReportId], references: [Id])
-  User              User       @relation(fields: [CreatedBy], references: [Id])
+  CodeReport        codeReport @relation("codeReportApproval", fields: [CodeReportId], references: [Id])
+  CodeReportComment codeReport @relation("codeReportApprovalComment", fields: [CodeReportId], references: [Id])
+  User              user       @relation(fields: [CreatedBy], references: [Id])
 }
 
-model DailyReportImage {
+model dailyReportImage {
   Id           Int    @id @default(autoincrement())
   CodeReportId Int
   ImageUrl     String
   Name         String
   Caption      String
 
-  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+  CodeReport codeReport @relation(fields: [CodeReportId], references: [Id])
 }
 
-model DailyTask {
+model dailyTask {
   Id           Int    @id @default(autoincrement())
   Name         String
   Description  String
@@ -143,10 +143,10 @@ model DailyTask {
   CodeReportId Int
   Note         String
 
-  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+  CodeReport codeReport @relation(fields: [CodeReportId], references: [Id])
 }
 
-model Material {
+model material {
   Id           Int    @id @default(autoincrement())
   Name         String
   Quantity     Float
@@ -155,10 +155,10 @@ model Material {
   Unit         String
   CodeReportId Int
 
-  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+  CodeReport codeReport @relation(fields: [CodeReportId], references: [Id])
 }
 
-model Project {
+model project {
   Id                Int     @id @default(autoincrement())
   Name              String
   BudgetPrice       Float
@@ -173,10 +173,10 @@ model Project {
   Description       String
   Unit              String
 
-  CodeProject CodeProject @relation(fields: [CodeProjectId], references: [Id])
+  CodeProject codeProject @relation(fields: [CodeProjectId], references: [Id])
 }
 
-model ProjectTask {
+model projectTask {
   Id          Int      @id @default(autoincrement())
   Name        String
   Description String
@@ -184,10 +184,10 @@ model ProjectTask {
   CreatedBy   Int
   CreatedDate DateTime @default(now())
 
-  User User @relation(fields: [CreatedBy], references: [Id])
+  User user @relation(fields: [CreatedBy], references: [Id])
 }
 
-model RequestForInformation {
+model requestForInformation {
   Id           Int     @id @default(autoincrement())
   CodeReportId Int
   Description  String
@@ -195,12 +195,12 @@ model RequestForInformation {
   AddressedFor String
   IsDelete     Boolean @default(false)
 
-  CodeReport                    CodeReport                      @relation(fields: [CodeReportId], references: [Id])
-  RequestForInformationAnswer   RequestForInformationAnswer[]
-  RequestForInformationDocument RequestForInformationDocument[]
+  CodeReport                    codeReport                      @relation(fields: [CodeReportId], references: [Id])
+  RequestForInformationAnswer   requestForInformationAnswer[]
+  RequestForInformationDocument requestForInformationDocument[]
 }
 
-model RequestForInformationAnswer {
+model requestForInformationAnswer {
   Id                      Int      @id @default(autoincrement())
   Answer                  String
   CreatedBy               Int
@@ -208,74 +208,74 @@ model RequestForInformationAnswer {
   RequestForInformationId Int
   IsDelete                Boolean  @default(false)
 
-  User                  User                  @relation(fields: [CreatedBy], references: [Id])
-  RequestForInformation RequestForInformation @relation(fields: [RequestForInformationId], references: [Id])
+  User                  user                  @relation(fields: [CreatedBy], references: [Id])
+  RequestForInformation requestForInformation @relation(fields: [RequestForInformationId], references: [Id])
 }
 
-model RequestForInformationDocument {
+model requestForInformationDocument {
   Id                      Int    @id @default(autoincrement())
   RequestForInformationId Int
   ImageUrl                String
   Name                    String
 
-  RequestForInformation RequestForInformation @relation(fields: [RequestForInformationId], references: [Id])
+  RequestForInformation requestForInformation @relation(fields: [RequestForInformationId], references: [Id])
 }
 
-model StatusReport {
+model statusReport {
   Id           Int    @id @default(autoincrement())
   Status       String
   CodeReportId Int
 
-  CodeReport        CodeReport          @relation(fields: [CodeReportId], references: [Id])
-  StatusReportImage StatusReportImage[]
+  CodeReport        codeReport          @relation(fields: [CodeReportId], references: [Id])
+  StatusReportImage statusReportImage[]
 }
 
-model StatusReportImage {
+model statusReportImage {
   Id             Int    @id @default(autoincrement())
   StatusReportId Int
   ImageUrl       String
   Name           String
 
-  StatusReport StatusReport @relation(fields: [StatusReportId], references: [Id])
+  StatusReport statusReport @relation(fields: [StatusReportId], references: [Id])
 }
 
-model Tool {
+model tool {
   Id           Int    @id @default(autoincrement())
   Name         String
   Description  String
   Quantity     Int
   CodeReportId Int
 
-  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+  CodeReport codeReport @relation(fields: [CodeReportId], references: [Id])
 }
 
-model Weather {
+model weather {
   Id           Int @id @default(autoincrement())
   WeatherId    Int
   CodeReportId Int
 
-  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+  CodeReport codeReport @relation(fields: [CodeReportId], references: [Id])
 }
 
-model Worker {
+model worker {
   Id           Int    @id @default(autoincrement())
   Name         String
   CodeReportId Int
   Quantity     Int
 
-  CodeReport CodeReport @relation(fields: [CodeReportId], references: [Id])
+  CodeReport codeReport @relation(fields: [CodeReportId], references: [Id])
 }
 
-model UserContact {
+model userContact {
   Id                Int     @id @default(autoincrement())
   PhoneNumber       String
   UserId            Int
   WhatsappAvailable Boolean
 
-  User User @relation(fields: [UserId], references: [Id])
+  User user @relation(fields: [UserId], references: [Id])
 }
 
-model UserPosition {
+model userPosition {
   Id            Int      @id @default(autoincrement())
   Position      Int
   EffectiveDate DateTime
@@ -283,11 +283,11 @@ model UserPosition {
   CreatedDate   DateTime @default(now())
   UserId        Int
 
-  User4 User @relation("User4", fields: [CreatedBy], references: [Id])
-  User5 User @relation("User5", fields: [UserId], references: [Id])
+  User4 user @relation("User4", fields: [CreatedBy], references: [Id])
+  User5 user @relation("User5", fields: [UserId], references: [Id])
 }
 
-model User {
+model user {
   Id           Int     @id @default(autoincrement())
   Email        String  @unique
   FirstName    String
@@ -297,18 +297,18 @@ model User {
   ImageUrl     String?
   ThumbnailUrl String?
 
-  Client                      Client[]
-  ClientContact               ClientContact[]
-  CodeProjectDocument         CodeProjectDocument[]
-  CreateCodeProject           CodeProject[]                 @relation("User1")
-  ConfirmedCodeProject        CodeProject[]                 @relation("User2")
-  CompletedCodeProject        CodeProject[]                 @relation("User3")
-  CodeProjectUser             CodeProjectUser[]
-  CodeReport                  CodeReport[]
-  CodeReportApproval          CodeReportApproval[]
-  ProjectTask                 ProjectTask[]
-  RequestForInformationAnswer RequestForInformationAnswer[]
-  CreateUserPosition          UserPosition[]                @relation("User4")
-  UserPosition                UserPosition[]                @relation("User5")
-  UserContact                 UserContact[]
+  Client                      client[]
+  ClientContact               clientContact[]
+  CodeProjectDocument         codeProjectDocument[]
+  CreateCodeProject           codeProject[]                 @relation("User1")
+  ConfirmedCodeProject        codeProject[]                 @relation("User2")
+  CompletedCodeProject        codeProject[]                 @relation("User3")
+  CodeProjectUser             codeProjectUser[]
+  CodeReport                  codeReport[]
+  CodeReportApproval          codeReportApproval[]
+  ProjectTask                 projectTask[]
+  RequestForInformationAnswer requestForInformationAnswer[]
+  CreateUserPosition          userPosition[]                @relation("User4")
+  UserPosition                userPosition[]                @relation("User5")
+  UserContact                 userContact[]
 }
