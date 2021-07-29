@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient, Prisma, CodeReport, Weather } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 

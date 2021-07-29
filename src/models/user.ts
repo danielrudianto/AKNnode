@@ -1,4 +1,4 @@
-import { UserPosition } from "@prisma/client";
+import { userPosition } from "@prisma/client";
 
 export interface UserFormModel{
     Id: number;
@@ -38,7 +38,7 @@ export interface UserLoginPresentationModel{
     IsActive: boolean;
     ImageUrl: string;
     ThumbnailUrl: string;
-    UserPosition?: UserPosition[];
+    UserPosition?: userPosition[];
     Password: string;
 }
 

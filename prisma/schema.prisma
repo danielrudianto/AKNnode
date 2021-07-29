@@ -101,7 +101,7 @@ model codeReport {
   CodeReportApprovalComment codeReportApproval[]   @relation("codeReportApprovalComment")
   DailyReportImage          dailyReportImage[]
   DailyTask                 dailyTask[]
-  statusReport              statusReport?
+  StatusReport              statusReport?
   Tool                      tool[]
   Weather                   weather?
   Material                  material[]

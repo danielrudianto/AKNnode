@@ -1,4 +1,4 @@
-import { CodeProjectUser } from "@prisma/client";
+import { codeProjectUser } from "@prisma/client";
 
 export interface CodeProjectForm{
     Id?: number;
@@ -15,7 +15,7 @@ export interface CodeProjectForm{
     CompletedBy?: number;
     IsDelete: boolean;
     Tasks: ProjectForm[];
-    Users: CodeProjectUser[];
+    Users: codeProjectUser[];
 }
 
 export interface ProjectForm{

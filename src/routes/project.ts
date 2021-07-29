@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient, Prisma, CodeReport, Weather, CodeProject, Project } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs';
 import * as path from 'path';
 import * as jwt from 'jsonwebtoken';

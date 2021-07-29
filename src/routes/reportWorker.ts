@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient, Prisma, CodeReport } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import * as moment from 'moment';
 import { WorkerReport, Worker } from '../models/codeReport';
 
