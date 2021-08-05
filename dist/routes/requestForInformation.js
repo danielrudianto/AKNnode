@@ -75,8 +75,6 @@ router.post("/", (req, res, next) => {
                             const ext = fileNameArray[fileNameArray.length - 1];
                             const uid = uuid.v1();
                             const newpath = path.join(__dirname, "../img/rfi/", (uid + "." + ext));
-                            console.log('oldpath', oldpath);
-                            console.log('newpath', newpath);
                             fs.rename(oldpath, newpath, error => {
                                 if (error == null) {
                                     prisma.requestForInformationDocument.create({
