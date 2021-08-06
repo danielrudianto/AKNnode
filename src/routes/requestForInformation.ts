@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as uuid from 'uuid';
 import * as path from 'path';
 import ProjectManagerAuth from '../middleware/project-manager-auth';
-import sharp from 'sharp';
 
 const prisma = new PrismaClient()
 
@@ -51,40 +50,36 @@ router.post("/", (req, res, next) => {
                     if(fileLength > 0){
                         let i = 0;
                         while(i < fileLength){
-                            const file = files["file[" + i + "]"] as formidable.File;
+                            const file = files["File[" + i + "]"] as formidable.File;
                             const oldpath = file.path;
                             const fileNameArray = file!.name!.split(".");
                             const ext = fileNameArray[fileNameArray.length - 1];
                             const uid = uuid.v1();
-                            sharp(oldpath).resize({
-                                fit: sharp.fit.contain,
-                                width:640
-                            }).toFile(path.join(__dirname, "../img/rfi/", (uid + "." + ext))).then(() => {
-                                fs.rename(oldpath, path.join(__dirname, "../img/rfi/", (uid + "." + ext)), error => {
-                                    if(error == null){
-                                        prisma.requestForInformationDocument.create({
-                                            data:{
-                                                RequestForInformationId: rfi.Id!,
-                                                ImageUrl:"rfi/" + uid + "." + ext,
-                                                Name: file.name!
-                                            }
-                                        }).catch(error => {
-                                            return res.status(500).json({message: error.message})
-                                        })
-                                    }
-                                });
-                            })
-                            
+                            const newpath = path.join(__dirname, "../img/rfi/", (uid + "." + ext));
+        
+                            fs.rename(oldpath, newpath, error => {
+                                if(error == null){
+                                    prisma.requestForInformationDocument.create({
+                                        data:{
+                                            RequestForInformationId: rfi.Id!,
+                                            ImageUrl:"rfi/" + uid + "." + ext,
+                                            Name: file.name!
+                                        }
+                                    }).catch(error => {
+                                        return res.status(500).json({message: error.message})
+                                    })
+                                }
+                            });
                             
                             if(i == (fileLength - 1)){
-                                res.status(200).json({message: "Status report created"});
+                                res.status(200).json({message: "RFI created"});
                                 const io = req.app.get('socketio')
-                                io.emit('newProgressReport', {
+                                io.emit('newRFI', {
                                     projectId: report.CodeProjectId,
                                     reportId: report!.Id
                                 })
                             }
-
+    
                             i++;
                         }
                     } else {

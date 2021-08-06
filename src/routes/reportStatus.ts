@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient, Prisma, CodeReport, Material } from '@prisma/client'
+import { PrismaClient, Prisma} from '@prisma/client'
 import { MaterialReport, Material as materialInterface } from '../models/codeReport';
 import * as formidable from 'formidable';
 import * as fs from 'fs';
