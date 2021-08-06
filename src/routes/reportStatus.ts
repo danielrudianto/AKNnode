@@ -53,7 +53,7 @@ router.post("/", async(req, res, next) => {
                             const uid = uuid.v1();
                             sharp(oldpath).resize({
                                 fit: sharp.fit.contain,
-                                width:800
+                                width:640
                             }).toFile(path.join(__dirname, "../img/status/", (uid + "." + ext))).then(() => {
                                 fs.rename(oldpath, path.join(__dirname, "../img/status/", (uid + "." + ext)), error => {
                                     if(error == null){

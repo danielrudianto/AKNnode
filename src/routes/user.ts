@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as formidable from 'formidable';
 import * as uuid from 'uuid';
 import bcrypt from 'bcrypt';
+import sharp from 'sharp';
 
 const prisma = new PrismaClient()
 
@@ -193,48 +194,53 @@ router.post("/profilePicture", (req, res, next) => {
                 const fileNameArray = files.image.name.split(".");
                 const ext = fileNameArray[fileNameArray.length - 1];
                 const id = uuid.v1();
-                var newpath = path.join(__dirname, "../img/profile/", (id + "." + ext));
-                fs.rename(oldpath, newpath, error => {
-                    if(error){
-                        return res.status(500).json({ message: error.message });
-                    } else {
-                        prisma.user.update({
-                            where:{
-                                Id: user!.Id
-                            },
-                            data:{
-                                ImageUrl:'profile/' + (id + "." + ext)
-                            },
-                            include:{
-                                UserPosition: true
-                            }
-                        }).then(user => {
-                            res.status(201).json({message: "Profile picture updated"});
-                            let token = jwt.sign(
-                                {
-                                    FirstName: user?.FirstName,
-                                    LastName: user?.LastName,
-                                    Email: user?.Email,
-                                    IsActive: user?.IsActive,
-                                    ImageUrl: user?.ImageUrl,
-                                    ThumbnailUrl: user?.ThumbnailUrl,
-                                    Position: user?.UserPosition[0]
-                                }, fs.readFileSync(path.resolve(__dirname, "../private.key")),
-                                { 
-                                    algorithm: 'RS256',
-                                    expiresIn: "30 days",
+
+                sharp(oldpath).resize({
+                    fit: sharp.fit.contain,
+                    width:200
+                }).toFile(path.join(__dirname, "../img/profile/", (id + "." + ext))).then(() => {
+                    fs.rename(oldpath, path.join(__dirname, "../img/profile/", (id + "." + ext)), error => {
+                        if(error){
+                            return res.status(500).json({ message: error.message });
+                        } else {
+                            prisma.user.update({
+                                where:{
+                                    Id: user!.Id
+                                },
+                                data:{
+                                    ImageUrl:'profile/' + (id + "." + ext)
+                                },
+                                include:{
+                                    UserPosition: true
                                 }
-                            )
-                            const io = req.app.get('socketio');
-                            io.emit('updateToken', {
-                                Email: user?.Email,
-                                Token: token
+                            }).then(user => {
+                                res.status(201).json({message: "Profile picture updated"});
+                                let token = jwt.sign(
+                                    {
+                                        FirstName: user?.FirstName,
+                                        LastName: user?.LastName,
+                                        Email: user?.Email,
+                                        IsActive: user?.IsActive,
+                                        ImageUrl: user?.ImageUrl,
+                                        ThumbnailUrl: user?.ThumbnailUrl,
+                                        Position: user?.UserPosition[0]
+                                    }, fs.readFileSync(path.resolve(__dirname, "../private.key")),
+                                    { 
+                                        algorithm: 'RS256',
+                                        expiresIn: "30 days",
+                                    }
+                                )
+                                const io = req.app.get('socketio');
+                                io.emit('updateToken', {
+                                    Email: user?.Email,
+                                    Token: token
+                                })
+                            }).catch(error => {
+                                throw error;
                             })
-                        }).catch(error => {
-                            throw error;
-                        })
-                    }
-                });
+                        }
+                    });
+                })
             });
         })
 })
