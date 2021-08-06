@@ -422,9 +422,10 @@ router.get("/", async (req, res, next) => {
         };
         let doc = printer.createPdfKitDocument(docDefinition);
         doc.pipe(fs_1.default.createWriteStream('output.pdf'));
-        doc.pipe(res);
-        res.setHeader('Content-Type', 'application/pdf');
         doc.end();
+        res.setHeader('Content-type', 'application/pdf');
+        res.setHeader('Content-disposition', 'inline; filename="DailyReport.pdf"');
+        doc.pipe(res);
     }).catch(error => {
         throw error;
     });
