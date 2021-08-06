@@ -443,6 +443,7 @@ router.get("/", async(req, res, next) => {
         let doc = printer.createPdfKitDocument(docDefinition);
         doc.pipe(fs.createWriteStream('output.pdf'));
         doc.pipe(res);
+        res.setHeader('Content-Type', 'application/pdf');
 
         doc.end();
     }).catch(error => {
