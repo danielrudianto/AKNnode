@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 import * as fs from 'fs';
 import * as path from 'path';
+import admin from '../helper/notification.helper';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -57,10 +58,55 @@ router.post('/', (req, res, next) => {
                         }
                     }
                 }
-            }).then(approval => {
+            }).then(async(approval) => {
                 res.status(201).json(approval);
                 const io = req.app.get('socketio')
                 io.emit('newApproval', approval);
+
+                const createdBy = await prisma.codeReport.findUnique({
+                    where:{
+                        Id: reportId
+                    },
+                    select:{
+                        User:{
+                            select:{
+                                Id: true
+                            }
+                        }
+                    }
+                })
+
+                prisma.userToken.findMany({
+                    where:{
+                        UserId: createdBy?.User.Id
+                    }
+                }).then(users => {
+                    const tokens: string[] = [];
+                    users.forEach(x => {
+                        tokens.push(x.Token);
+                    })
+
+                    const notification_options = {
+                        priority: "high",
+                        timeToLive: 60 * 60 * 24
+                    };
+
+                    const message_notification = {
+                        notification: {
+                            title: "New approval for your report",
+                            body: `${user?.FirstName} ${user?.LastName} has approved your report.`,
+                        },
+                        data:{
+                            type:"notification",
+                        }
+                    };
+
+                    admin.messaging().sendToDevice(tokens, message_notification, notification_options).then(response => {
+                        console.log(response);
+                    }).catch(error => {
+                        console.log(error.results);
+                    })
+                })
             }).catch(error => {
                 throw error;
             });

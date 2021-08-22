@@ -5,10 +5,131 @@ import * as fs from 'fs';
 import * as uuid from 'uuid';
 import * as path from 'path';
 import ProjectManagerAuth from '../middleware/project-manager-auth';
+import sharp from 'sharp';
 
 const prisma = new PrismaClient()
 
 const router = Router();
+
+router.put("/", (req, res, next) => {
+    const form = new formidable.IncomingForm({
+        uploadDir: path.join(__dirname, "../tmp")
+    });
+
+    form.parse(req, function(err, fields, files) {
+        const fileLength    = parseInt(fields.Files.toString());
+        const deleteFileLength  = parseInt(fields.DeleteFiles.toString());
+        const deleteFile            = fields.Delete.toString();
+
+        const Header        = fields.Header.toString();
+        const AddressedFor  = fields.AddressedFor.toString();
+        const Description   = fields.Description.toString();
+        const Id            = parseInt(fields.Id.toString());
+        const ProjectId     = parseInt(fields.ProjectId.toString());
+
+        prisma.codeReport.update({
+            where:{
+                Id: Id
+            },
+            data:{
+                RequestForInformation:{
+                    update:{
+                        Header: Header,
+                        AddressedFor: AddressedFor,
+                        Description: Description
+                    }
+                }
+            },
+            select:{
+                RequestForInformation:{
+                    select:{
+                        Id: true
+                    }
+                }
+            }
+        }).then(rfi => {
+            const deleteId: any[] = [];
+            const deleteFileArray = JSON.parse(deleteFile);
+            deleteFileArray.forEach((deleteFileItem: number) => {
+                deleteId.push(deleteFileItem);
+            })
+
+            if(deleteId.length > 0){
+                prisma.$transaction([
+                    prisma.requestForInformationDocument.findMany({
+                        where:{
+                            Id:{
+                                in:deleteId
+                            }
+                        }
+                    }),
+                    prisma.requestForInformationDocument.deleteMany({
+                        where:{
+                            Id:{
+                                in:deleteId
+                            }
+                        }
+                    })
+                ]).then(response=> {
+                    (response[0] as any[]).forEach(respond => {
+                        fs.unlinkSync(path.join(__dirname, "../img/", respond.ImageUrl));
+                    })
+                })
+                
+            }
+            if(fileLength > 0){
+                console.log("Masuk sini");
+                let i = 0;
+                while(i < fileLength){
+                    const file = files["File[" + i + "]"] as formidable.File;
+                    const oldpath = file.path;
+                    const fileNameArray = file!.name!.split(".");
+                    const ext = fileNameArray[fileNameArray.length - 1];
+                    const uid = uuid.v1();
+
+                    sharp(oldpath).resize({
+                        fit: sharp.fit.contain,
+                        width:640
+                    }).toFile(path.join(__dirname, "../img/rfi/", (uid + "." + ext))).then(() => {
+                        fs.rename(oldpath, path.join(__dirname, "../img/rfi/", (uid + "." + ext)), error => {
+                            if(error == null){
+                                prisma.requestForInformationDocument.create({
+                                    data:{
+                                        RequestForInformationId: rfi.RequestForInformation!.Id,
+                                        ImageUrl:"rfi/" + uid + "." + ext,
+                                        Name: file.name!
+                                    }
+                                }).then(() => {
+                                    console.log("File uploaded");
+                                }).catch(error => {
+                                    console.log(error);
+                                })
+                            }
+                        });
+                    })
+                    
+                    if(i == (fileLength - 1)){
+                        res.status(200).json({message: "RFI updated"});
+                        const io = req.app.get('socketio')
+                        io.emit('editRFI', {
+                            projectId: ProjectId,
+                            reportId: Id
+                        })
+                    }
+
+                    i++;
+                }
+            } else {
+                res.status(200).json({message: "RFI updated"});
+                const io = req.app.get('socketio')
+                io.emit('editRFI', {
+                    projectId: ProjectId,
+                    reportId: Id
+                })
+            }
+        })
+    });
+})
 
 router.post("/", (req, res, next) => {
     const form = new formidable.IncomingForm({
@@ -50,6 +171,7 @@ router.post("/", (req, res, next) => {
                     if(fileLength > 0){
                         let i = 0;
                         while(i < fileLength){
+                            console.log("File ke-" + i + " sedang di iupload");
                             const file = files["File[" + i + "]"] as formidable.File;
                             const oldpath = file.path;
                             const fileNameArray = file!.name!.split(".");

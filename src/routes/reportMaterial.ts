@@ -6,6 +6,52 @@ const prisma = new PrismaClient()
 
 const router = Router();
 
+router.put("/", async(req, res, next) => {
+    const materialReport: MaterialReport = req.body as MaterialReport;
+    const materials = materialReport.Materials;
+        const materialData: Material[] = [];
+        
+        materials.forEach(material => {
+            materialData.push({
+                Name: material.Name,
+                Quantity: material.Quantity,
+                Description: material.Description,
+                Unit: material.Unit,
+                Status: material.Status,
+                CodeReportId: materialReport.Id!,
+            })
+        })
+
+    prisma.$transaction([
+        prisma.material.deleteMany({
+            where:{
+                CodeReportId: materialReport.Id
+            }
+        }),
+        prisma.material.createMany({
+            data:materialData
+        }),
+        prisma.codeReport.update({
+            data:{
+                Note: materialReport.Note
+            },
+            where:{
+                Id: materialReport.Id
+            }
+        })
+    ])
+    .then(() => {
+        res.json({ message: "Material report edited" })
+        const io = req.app.get('socketio')
+        io.emit('editMaterialReport', {
+            projectId: materialReport.CodeProjectId,
+            reportId: materialReport!.Id
+        })
+    }).catch(error => {
+        throw error;
+    })
+});
+
 router.post("/", async(req, res, next) => {
     const materialReport: MaterialReport = req.body as MaterialReport;
     prisma.user.findUnique({
@@ -20,7 +66,7 @@ router.post("/", async(req, res, next) => {
                 CreatedDate: new Date(),
                 Date: new Date(),
                 CodeProjectId: materialReport.CodeProjectId,
-                Note: "",
+                Note: materialReport.Note,
                 Type: 3
             }
         }).then(() => {

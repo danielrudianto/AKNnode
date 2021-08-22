@@ -6,6 +6,40 @@ const prisma = new PrismaClient()
 
 const router = Router();
 
+router.put("/", async(req, res, next) => {
+    const toolReport: ToolReport = req.body as ToolReport;
+    prisma.tool.deleteMany({
+        where:{
+            CodeReportId: toolReport.Id
+        }
+    }).then(() => {
+        const tools = toolReport.Tools;
+        const toolData: Tool[] = [];
+        
+        tools.forEach(tool => {
+            toolData.push({
+                Name: tool.Name,
+                Description: tool.Description,
+                Quantity: tool.Quantity,
+                CodeReportId: toolReport.Id!
+            })
+        })
+
+        prisma.tool.createMany({
+            data:toolData
+        }).then(() => {
+            res.json({ message: "Tool report created" })
+            const io = req.app.get('socketio')
+            io.emit('editToolReport', {
+                projectId: toolReport.CodeProjectId,
+                reportId: toolReport!.Id
+            })
+        }).catch(error => {
+            throw error;
+        })
+    })
+});
+
 router.post("/", async(req, res, next) => {
     const toolReport: ToolReport = req.body as ToolReport;
     prisma.user.findUnique({

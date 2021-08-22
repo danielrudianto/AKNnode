@@ -25,6 +25,13 @@ model client {
   CodeProject             codeProject[]
 }
 
+model userToken {
+  Id     Int    @id @default(autoincrement())
+  UserId Int
+  Token  String
+  User   user?  @relation("User6", fields: [UserId], references: [Id])
+}
+
 model clientContact {
   Id          Int      @id @default(autoincrement())
   Name        String
@@ -311,4 +318,5 @@ model user {
   CreateUserPosition          userPosition[]                @relation("User4")
   UserPosition                userPosition[]                @relation("User5")
   UserContact                 userContact[]
+  Token                       userToken[]                   @relation("User6")
 }

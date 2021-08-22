@@ -174,5 +174,63 @@ router.post("/login", async(req, res, next) => {
     })
 });
 
+router.delete("/sendCloudToken", (req, res, next) => {
+    console.log(req.headers);
+    console.log(req.query);
+})
+
+router.post("/sendCloudToken", (req, res, next) => {
+    const token: string = req.headers.authorization?.toString().split(' ')[1]!;
+    const decoded: any = jwt.verify(
+        token, 
+        fs.readFileSync(path.join(__dirname, "../private.key")), 
+        { algorithms: ['RS256'] }
+    );
+
+    const cloudToken = req.body.token;
+    prisma.user.findFirst({
+        where:{
+            Email: decoded.Email,
+            IsActive: true
+        },
+        include:{
+            UserPosition:{
+                orderBy:{
+                    EffectiveDate: 'desc'
+                },
+                where:{
+                    User5:{
+                        Email: decoded.Email
+                    } 
+                },
+                select:{
+                    Position: true,
+                    EffectiveDate: true
+                }
+            }
+        }
+    }).then(user => {
+        prisma.$transaction([
+            prisma.userToken.deleteMany({
+                where:{
+                    Token: cloudToken
+                }
+            }),
+            prisma.userToken.create({
+                data:{
+                    UserId: user?.Id,
+                    Token: cloudToken
+                }
+            })
+        ]).then(() => {
+            res.status(200).json({message: "Token created"});
+        }).catch(error => {
+            throw error;
+        })
+    }).catch(error => {
+        throw error;
+    })
+})
+
 
 export default router;

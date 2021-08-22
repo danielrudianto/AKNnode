@@ -81,7 +81,7 @@ app.use('/img/:folder/:file', (req, res, next) => {
     readStream.pipe(res);
 });
 
-app.use('download/img/:folder/:file', (req, res, next) => {
+app.use('/download/img/:folder/:file', (req, res, next) => {
     var filePath = path.join(__dirname, 'img', req.params.folder, req.params.file);
     var stat = fs.statSync(filePath);
     res.writeHead(200, {
@@ -115,6 +115,6 @@ io.on("connection", function(socket: any) {
     console.log("a user connected");
 });
 
-http.listen(3000, function() {
-    console.log("listening on *:3000");
+http.listen(5000, function() {
+    console.log("listening on *:5000");
 });
