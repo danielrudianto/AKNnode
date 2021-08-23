@@ -76,39 +76,43 @@ router.post('/', (req, res, next) => {
                     }
                 })
 
-                prisma.userToken.findMany({
-                    where:{
-                        UserId: createdBy?.User.Id
-                    }
-                }).then(users => {
-                    const tokens: string[] = [];
-                    users.forEach(x => {
-                        tokens.push(x.Token);
-                    })
-
-                    const notification_options = {
-                        priority: "high",
-                        timeToLive: 60 * 60 * 24
-                    };
-
-                    const message_notification = {
-                        notification: {
-                            title: "New approval for your report",
-                            body: `${user?.FirstName} ${user?.LastName} has approved your report.`,
-                            icon: "https://apiz.aknsmartreport.com/img/assets/Kop.jpg"
-                        },
-                        data:{
-                            type:"notification",
-                            url:"http://localhost:4200"
+                if(approval.CreatedBy != createdBy!.User.Id){
+                    prisma.userToken.findMany({
+                        where:{
+                            UserId: createdBy?.User.Id
                         }
-                    };
-
-                    admin.messaging().sendToDevice(tokens, message_notification, notification_options).then(response => {
-                        console.log(response);
-                    }).catch(error => {
-                        console.log(error.results);
+                    }).then(users => {
+                        const tokens: string[] = [];
+                        users.forEach(x => {
+                            tokens.push(x.Token);
+                        })
+    
+                        const notification_options = {
+                            priority: "high",
+                            timeToLive: 60 * 60 * 24
+                        };
+    
+                        const message_notification = {
+                            notification: {
+                                title: "New approval for your report",
+                                body: `${user?.FirstName} ${user?.LastName} has approved your report.`,
+                                icon: "https://apiz.aknsmartreport.com/img/assets/Kop.jpg"
+                            },
+                            data:{
+                                type:"notification",
+                                url:"https://app.aknsmartreport.com/Project/Feed/" + reportId
+                            }
+                        };
+    
+                        if(tokens.length > 0){
+                            admin.messaging().sendToDevice(tokens, message_notification, notification_options).then(response => {
+                                console.log(response);
+                            }).catch(error => {
+                                console.log(error.results);
+                            })
+                        }      
                     })
-                })
+                }
             }).catch(error => {
                 throw error;
             });
