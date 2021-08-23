@@ -38,7 +38,6 @@ router.put("/", (req, res, next) => {
     });
     form.parse(req, function (err, fields, files) {
         const fileLength = parseInt(fields.Files.toString());
-        const deleteFileLength = parseInt(fields.DeleteFiles.toString());
         const deleteFile = fields.Delete.toString();
         const Header = fields.Header.toString();
         const AddressedFor = fields.AddressedFor.toString();

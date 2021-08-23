@@ -115,6 +115,6 @@ io.on("connection", function(socket: any) {
     console.log("a user connected");
 });
 
-http.listen(5000, function() {
-    console.log("listening on *:5000");
+http.listen(3000, function() {
+    console.log("listening on *:3000");
 });
