@@ -20,8 +20,8 @@ router.put("/", async(req, res, next) => {
         workers.forEach(worker => {
             workerData.push({
                 Name: worker.Name,
-                Quantity: worker.Quantity,
-                CodeReportId: worker.Id!,
+                Quantity: parseInt(worker.Quantity.toString()),
+                CodeReportId: workerReport.Id!
             })
         })
 
@@ -30,7 +30,7 @@ router.put("/", async(req, res, next) => {
         }).then(() => {
             res.json({ message: "Worker report created" })
             const io = req.app.get('socketio')
-            io.emit('editWorkerReport', {
+            io.emit('editAttendanceReport', {
                 projectId: workerReport.CodeProjectId,
                 reportId: workerReport!.Id
             })
@@ -173,7 +173,8 @@ router.get("/getToday/:projectId", async(req, res, next) => {
             CodeProjectId: parseInt(req.params.projectId),
             Worker:{
                 some: {}
-            }
+            },
+            IsDelete: false
         },
         select:{
             Date: true,

@@ -177,5 +177,64 @@ router.post("/login", async (req, res, next) => {
         throw Error("User not found");
     });
 });
+router.delete("/sendCloudToken", (req, res, next) => {
+    const token = req.query.token?.toString();
+    prisma.userToken.deleteMany({
+        where: {
+            Token: token
+        }
+    }).then(() => {
+        res.status(201).json({ message: "Token deleted" });
+    }).catch(error => {
+        throw error;
+    });
+});
+router.post("/sendCloudToken", (req, res, next) => {
+    const token = req.headers.authorization?.toString().split(' ')[1];
+    const decoded = jwt.verify(token, fs.readFileSync(path.join(__dirname, "../private.key")), { algorithms: ['RS256'] });
+    const cloudToken = req.body.token;
+    prisma.user.findFirst({
+        where: {
+            Email: decoded.Email,
+            IsActive: true
+        },
+        include: {
+            UserPosition: {
+                orderBy: {
+                    EffectiveDate: 'desc'
+                },
+                where: {
+                    User5: {
+                        Email: decoded.Email
+                    }
+                },
+                select: {
+                    Position: true,
+                    EffectiveDate: true
+                }
+            }
+        }
+    }).then(user => {
+        prisma.$transaction([
+            prisma.userToken.deleteMany({
+                where: {
+                    Token: cloudToken
+                }
+            }),
+            prisma.userToken.create({
+                data: {
+                    UserId: user?.Id,
+                    Token: cloudToken
+                }
+            })
+        ]).then(() => {
+            res.status(200).json({ message: "Token created" });
+        }).catch(error => {
+            throw error;
+        });
+    }).catch(error => {
+        throw error;
+    });
+});
 exports.default = router;
 //# sourceMappingURL=auth.js.map

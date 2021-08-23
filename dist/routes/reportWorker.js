@@ -24,6 +24,93 @@ const client_1 = require("@prisma/client");
 const moment = __importStar(require("moment"));
 const prisma = new client_1.PrismaClient();
 const router = express_1.Router();
+router.put("/", async (req, res, next) => {
+    const workerReport = req.body;
+    prisma.worker.deleteMany({
+        where: {
+            CodeReportId: workerReport.Id
+        }
+    }).then(() => {
+        const workers = workerReport.Workers;
+        const workerData = [];
+        workers.forEach(worker => {
+            workerData.push({
+                Name: worker.Name,
+                Quantity: parseInt(worker.Quantity.toString()),
+                CodeReportId: workerReport.Id
+            });
+        });
+        prisma.worker.createMany({
+            data: workerData
+        }).then(() => {
+            res.json({ message: "Worker report created" });
+            const io = req.app.get('socketio');
+            io.emit('editAttendanceReport', {
+                projectId: workerReport.CodeProjectId,
+                reportId: workerReport.Id
+            });
+        }).catch(error => {
+            throw error;
+        });
+    });
+});
+router.post("/", async (req, res, next) => {
+    const workerReport = req.body;
+    prisma.user.findUnique({
+        where: {
+            Email: workerReport.CreatedBy.toString()
+        }
+    }).then(user => {
+        prisma.codeReport.create({
+            data: {
+                CreatedBy: user.Id,
+                IsDelete: false,
+                CreatedDate: new Date(),
+                Date: new Date(),
+                CodeProjectId: workerReport.CodeProjectId,
+                Note: "",
+                Type: 1
+            }
+        }).then(() => {
+            prisma.codeReport.findFirst({
+                where: {
+                    CreatedBy: user.Id,
+                    Type: 1
+                },
+                orderBy: {
+                    Id: 'desc'
+                }
+            }).then(codeReport => {
+                const codeReportId = codeReport?.Id;
+                const workers = workerReport.Workers;
+                const workerData = [];
+                workers.forEach(worker => {
+                    workerData.push({
+                        Name: worker.Name,
+                        Quantity: worker.Quantity,
+                        CodeReportId: codeReportId
+                    });
+                });
+                prisma.worker.createMany({
+                    data: workerData
+                }).then(() => {
+                    res.json({ message: "Successfully inserting worker report" });
+                    const io = req.app.get('socketio');
+                    io.emit('newAttendanceReport', {
+                        projectId: workerReport.CodeProjectId,
+                        reportId: codeReport.Id
+                    });
+                }).catch(error => {
+                    throw error;
+                });
+            }).catch(error => {
+                throw error;
+            });
+        }).catch((error) => {
+            throw error;
+        });
+    });
+});
 router.post("/", async (req, res, next) => {
     const workerReport = req.body;
     prisma.user.findUnique({
@@ -93,7 +180,8 @@ router.get("/getToday/:projectId", async (req, res, next) => {
             CodeProjectId: parseInt(req.params.projectId),
             Worker: {
                 some: {}
-            }
+            },
+            IsDelete: false
         },
         select: {
             Date: true,

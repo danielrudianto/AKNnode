@@ -39,7 +39,8 @@ router.get("/getById/:id", (req, res, next) => {
                     Name: true,
                     Description: true,
                     Quantity: true,
-                    Unit: true
+                    Unit: true,
+                    Status: true
                 }
             },
             StatusReport: {
@@ -227,7 +228,15 @@ router.get("/:projectId", (req, res, next) => {
         orderBy: {
             CreatedDate: 'desc'
         },
-        include: {
+        select: {
+            Id: true,
+            Note: true,
+            CreatedBy: true,
+            CreatedDate: true,
+            Date: true,
+            CodeProjectId: true,
+            Type: true,
+            IsDelete: true,
             User: {
                 select: {
                     FirstName: true,
@@ -253,7 +262,8 @@ router.get("/:projectId", (req, res, next) => {
                     Name: true,
                     Description: true,
                     Quantity: true,
-                    Unit: true
+                    Unit: true,
+                    Status: true
                 }
             },
             StatusReport: {
@@ -369,7 +379,15 @@ router.get("/", (req, res, next) => {
         },
         take: 5,
         skip: 0,
-        include: {
+        select: {
+            Id: true,
+            Note: true,
+            CreatedBy: true,
+            CreatedDate: true,
+            Date: true,
+            CodeProjectId: true,
+            Type: true,
+            IsDelete: true,
             User: {
                 select: {
                     FirstName: true,
@@ -395,7 +413,8 @@ router.get("/", (req, res, next) => {
                     Name: true,
                     Description: true,
                     Quantity: true,
-                    Unit: true
+                    Unit: true,
+                    Status: true
                 }
             },
             StatusReport: {

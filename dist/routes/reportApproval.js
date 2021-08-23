@@ -18,12 +18,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const jwt = __importStar(require("jsonwebtoken"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const notification_helper_1 = __importDefault(require("../helper/notification.helper"));
 const router = express_1.Router();
 const prisma = new client_1.PrismaClient();
 router.post('/', (req, res, next) => {
@@ -70,10 +74,52 @@ router.post('/', (req, res, next) => {
                         }
                     }
                 }
-            }).then(approval => {
+            }).then(async (approval) => {
                 res.status(201).json(approval);
                 const io = req.app.get('socketio');
                 io.emit('newApproval', approval);
+                const createdBy = await prisma.codeReport.findUnique({
+                    where: {
+                        Id: reportId
+                    },
+                    select: {
+                        User: {
+                            select: {
+                                Id: true
+                            }
+                        }
+                    }
+                });
+                prisma.userToken.findMany({
+                    where: {
+                        UserId: createdBy?.User.Id
+                    }
+                }).then(users => {
+                    const tokens = [];
+                    users.forEach(x => {
+                        tokens.push(x.Token);
+                    });
+                    const notification_options = {
+                        priority: "high",
+                        timeToLive: 60 * 60 * 24
+                    };
+                    const message_notification = {
+                        notification: {
+                            title: "New approval for your report",
+                            body: `${user?.FirstName} ${user?.LastName} has approved your report.`,
+                            icon: "https://apiz.aknsmartreport.com/img/assets/Kop.jpg"
+                        },
+                        data: {
+                            type: "notification",
+                            url: "http://localhost:4200"
+                        }
+                    };
+                    notification_helper_1.default.messaging().sendToDevice(tokens, message_notification, notification_options).then(response => {
+                        console.log(response);
+                    }).catch(error => {
+                        console.log(error.results);
+                    });
+                });
             }).catch(error => {
                 throw error;
             });

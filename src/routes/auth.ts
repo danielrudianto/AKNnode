@@ -175,8 +175,16 @@ router.post("/login", async(req, res, next) => {
 });
 
 router.delete("/sendCloudToken", (req, res, next) => {
-    console.log(req.headers);
-    console.log(req.query);
+    const token = req.query.token?.toString();
+    prisma.userToken.deleteMany({
+        where:{
+            Token: token
+        }
+    }).then(() => {
+        res.status(201).json({message: "Token deleted"});
+    }).catch(error => {
+        throw error;
+    })
 })
 
 router.post("/sendCloudToken", (req, res, next) => {

@@ -78,7 +78,6 @@ router.put("/", (req, res, next) => {
                 
             }
             if(fileLength > 0){
-                console.log("Masuk sini");
                 let i = 0;
                 while(i < fileLength){
                     const file = files["File[" + i + "]"] as formidable.File;
@@ -171,7 +170,6 @@ router.post("/", (req, res, next) => {
                     if(fileLength > 0){
                         let i = 0;
                         while(i < fileLength){
-                            console.log("File ke-" + i + " sedang di iupload");
                             const file = files["File[" + i + "]"] as formidable.File;
                             const oldpath = file.path;
                             const fileNameArray = file!.name!.split(".");
@@ -390,7 +388,6 @@ router.delete("/answer/:answerId", ProjectManagerAuth, (req, res, next) => {
         }
     }).then(response => {
         res.status(201).json({message: "Answer deleted"});
-        console.log(response);
         const io = req.app.get('socketio')
         io.emit('deleteAnswer', response);
     }).catch(error => {

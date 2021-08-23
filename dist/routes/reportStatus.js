@@ -31,6 +31,113 @@ const path = __importStar(require("path"));
 const sharp_1 = __importDefault(require("sharp"));
 const prisma = new client_1.PrismaClient();
 const router = express_1.Router();
+router.put("/", (req, res, next) => {
+    const form = new formidable.IncomingForm({
+        uploadDir: path.join(__dirname, "../tmp")
+    });
+    form.parse(req, function (err, fields, files) {
+        const fileLength = parseInt(fields.Files.toString());
+        const deleteFile = fields.Delete.toString();
+        const Id = parseInt(fields.Id.toString());
+        const progress = fields.Progress.toString();
+        const ProjectId = parseInt(fields.ProjectId.toString());
+        prisma.codeReport.update({
+            where: {
+                Id: Id
+            },
+            data: {
+                StatusReport: {
+                    update: {
+                        Status: progress
+                    }
+                }
+            },
+            select: {
+                StatusReport: {
+                    select: {
+                        Id: true
+                    }
+                }
+            }
+        }).then(statusReport => {
+            const deleteId = [];
+            const deleteFileArray = JSON.parse(deleteFile);
+            deleteFileArray.forEach((deleteFileItem) => {
+                deleteId.push(deleteFileItem);
+            });
+            if (deleteId.length > 0) {
+                prisma.$transaction([
+                    prisma.statusReportImage.findMany({
+                        where: {
+                            Id: {
+                                in: deleteId
+                            }
+                        }
+                    }),
+                    prisma.statusReportImage.deleteMany({
+                        where: {
+                            Id: {
+                                in: deleteId
+                            }
+                        }
+                    })
+                ]).then(response => {
+                    response[0].forEach(respond => {
+                        fs.unlinkSync(path.join(__dirname, "../img/", respond.ImageUrl));
+                    });
+                });
+            }
+            if (fileLength > 0) {
+                let i = 0;
+                while (i < fileLength) {
+                    const file = files["File[" + i + "]"];
+                    console.log(file);
+                    const oldpath = file.path;
+                    const fileNameArray = file.name.split(".");
+                    const ext = fileNameArray[fileNameArray.length - 1];
+                    const uid = uuid.v1();
+                    sharp_1.default(oldpath).resize({
+                        fit: sharp_1.default.fit.contain,
+                        width: 640
+                    }).toFile(path.join(__dirname, "../img/status/", (uid + "." + ext))).then(() => {
+                        fs.rename(oldpath, path.join(__dirname, "../img/status/", (uid + "." + ext)), error => {
+                            if (error == null) {
+                                prisma.statusReportImage.create({
+                                    data: {
+                                        StatusReportId: statusReport.StatusReport.Id,
+                                        ImageUrl: "status/" + uid + "." + ext,
+                                        Name: file.name
+                                    }
+                                }).then(() => {
+                                    console.log("File uploaded");
+                                }).catch(error => {
+                                    console.log(error);
+                                });
+                            }
+                        });
+                    });
+                    if (i == (fileLength - 1)) {
+                        res.status(200).json({ message: "Progress report updated" });
+                        const io = req.app.get('socketio');
+                        io.emit('editProgressReport', {
+                            projectId: ProjectId,
+                            reportId: Id
+                        });
+                    }
+                    i++;
+                }
+            }
+            else {
+                res.status(200).json({ message: "Progress report updated" });
+                const io = req.app.get('socketio');
+                io.emit('editProgressReport', {
+                    projectId: ProjectId,
+                    reportId: Id
+                });
+            }
+        });
+    });
+});
 router.post("/", async (req, res, next) => {
     const form = new formidable.IncomingForm({
         uploadDir: path.join(__dirname, "../tmp")
