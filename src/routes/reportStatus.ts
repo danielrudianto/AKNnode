@@ -167,22 +167,21 @@ router.post("/", async(req, res, next) => {
                             const ext = fileNameArray[fileNameArray.length - 1];
                             const uid = uuid.v1();
                             sharp(oldpath).resize({
-                                fit: sharp.fit.contain,
-                                width:640
-                            }).toFile(path.join(__dirname, "../img/status/", (uid + "." + ext))).then(() => {
-                                fs.rename(oldpath, path.join(__dirname, "../img/status/", (uid + "." + ext)), error => {
-                                    if(error == null){
-                                        prisma.statusReportImage.create({
-                                            data:{
-                                                StatusReportId: statusReport.Id!,
-                                                ImageUrl:"status/" + uid + "." + ext,
-                                                Name: file.name!
-                                            }
-                                        }).catch(error => {
-                                            return res.status(500).json({message: error.message})
-                                        })
+                                fit: sharp.fit.cover,
+                                width:640,
+                                height:undefined,
+                            })
+                            .toFile(path.join(__dirname, "../img/status/", (uid + "." + ext)))
+                            .then(() => {
+                                prisma.statusReportImage.create({
+                                    data:{
+                                        StatusReportId: statusReport.Id!,
+                                        ImageUrl:"status/" + uid + "." + ext,
+                                        Name: file.name!
                                     }
-                                });
+                                }).catch(error => {
+                                    return res.status(500).json({message: error.message})
+                                })
                             })
                             
                             

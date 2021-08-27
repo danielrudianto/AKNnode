@@ -108,7 +108,7 @@ router.post('/', (req, res, next) => {
                             notification: {
                                 title: "New approval for your report",
                                 body: `${user?.FirstName} ${user?.LastName} has approved your report.`,
-                                icon: "https://apiz.aknsmartreport.com/img/assets/Kop.jpg"
+                                icon: "https://apiz.aknsmartreport.com/img/assets/notificationIcon.png"
                             },
                             data: {
                                 type: "notification",

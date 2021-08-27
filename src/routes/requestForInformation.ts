@@ -6,6 +6,7 @@ import * as uuid from 'uuid';
 import * as path from 'path';
 import ProjectManagerAuth from '../middleware/project-manager-auth';
 import sharp from 'sharp';
+import admin from '../helper/notification.helper';
 
 const prisma = new PrismaClient()
 
@@ -89,21 +90,17 @@ router.put("/", (req, res, next) => {
                         fit: sharp.fit.contain,
                         width:640
                     }).toFile(path.join(__dirname, "../img/rfi/", (uid + "." + ext))).then(() => {
-                        fs.rename(oldpath, path.join(__dirname, "../img/rfi/", (uid + "." + ext)), error => {
-                            if(error == null){
-                                prisma.requestForInformationDocument.create({
-                                    data:{
-                                        RequestForInformationId: rfi.RequestForInformation!.Id,
-                                        ImageUrl:"rfi/" + uid + "." + ext,
-                                        Name: file.name!
-                                    }
-                                }).then(() => {
-                                    console.log("File uploaded");
-                                }).catch(error => {
-                                    console.log(error);
-                                })
+                        prisma.requestForInformationDocument.create({
+                            data:{
+                                RequestForInformationId: rfi.RequestForInformation!.Id,
+                                ImageUrl:"rfi/" + uid + "." + ext,
+                                Name: file.name!
                             }
-                        });
+                        }).then(() => {
+                            console.log("File uploaded");
+                        }).catch(error => {
+                            console.log(error);
+                        })
                     })
                     
                     if(i == (fileLength - 1)){
@@ -175,20 +172,23 @@ router.post("/", (req, res, next) => {
                             const ext = fileNameArray[fileNameArray.length - 1];
                             const uid = uuid.v1();
                             const newpath = path.join(__dirname, "../img/rfi/", (uid + "." + ext));
-        
-                            fs.rename(oldpath, newpath, error => {
-                                if(error == null){
-                                    prisma.requestForInformationDocument.create({
-                                        data:{
-                                            RequestForInformationId: rfi.Id!,
-                                            ImageUrl:"rfi/" + uid + "." + ext,
-                                            Name: file.name!
-                                        }
-                                    }).catch(error => {
-                                        return res.status(500).json({message: error.message})
-                                    })
-                                }
-                            });
+                            sharp(oldpath).resize({
+                                fit: sharp.fit.cover,
+                                width:640,
+                                height:undefined,
+                            })
+                            .toFile(path.join(__dirname, "../img/status/", (uid + "." + ext)))
+                            .then(() => {
+                                prisma.requestForInformationDocument.create({
+                                    data:{
+                                        RequestForInformationId: rfi.Id!,
+                                        ImageUrl:"rfi/" + uid + "." + ext,
+                                        Name: file.name!
+                                    }
+                                }).catch(error => {
+                                    return res.status(500).json({message: error.message})
+                                })
+                            })
                             
                             if(i == (fileLength - 1)){
                                 res.status(200).json({message: "RFI created"});
@@ -228,56 +228,102 @@ router.post('/answer', (req, res, next) => {
         prisma.requestForInformation.findFirst({
             where:{
                 CodeReportId: reportId
+            },
+            select:{
+                CodeReport:{
+                    select:{
+                        User:{
+                            select:{
+                                Id: true
+                            }
+                        },
+                        CodeProjectId: true
+                    }
+                },
+                CodeReportId: true,
+                Id: true,
+                
             }
         }),
         prisma.user.findFirst({
             where:{
                 Email: createdBy,
                 IsActive: true
+            },
+            select:{
+                Token: {
+                    select:{
+                        Token: true
+                    },
+                    orderBy: {
+                        Id: "asc"
+                    },
+                    take: 1
+                },
+                Id: true,
+                FirstName: true,
+                LastName: true
             }
         })
     ]).then(response => {
         if(response[0] != null && response[1] != null){
-            prisma.requestForInformation.findFirst({
-                where:{
-                    CodeReportId: reportId
+            prisma.requestForInformationAnswer.create({
+                data:{
+                    RequestForInformationId: response[0]!.Id,
+                    Answer: answer,
+                    CreatedBy: response[1]!.Id,
+                    CreatedDate: new Date()
+                },
+                select:{
+                    User:{
+                        select:{
+                            FirstName: true,
+                            LastName: true,
+                            Email: true,
+                            ImageUrl: true,
+                            Id: true
+                        }
+                    },
+                    RequestForInformation:{
+                        select:{
+                            CodeReportId: true
+                        }
+                    },
+                    Answer: true,
+                    CreatedDate: true,
+                    Id: true
                 }
             }).then(rfi => {
-                prisma.requestForInformationAnswer.create({
-                    data:{
-                        RequestForInformationId: rfi!.Id,
-                        Answer: answer,
-                        CreatedBy: response[1]!.Id,
-                        CreatedDate: new Date()
-                    },
-                    select:{
-                        User:{
-                            select:{
-                                FirstName: true,
-                                LastName: true,
-                                Email: true,
-                                ImageUrl: true
-                            }
+                res.status(201).json({message: "Answer created"});
+                const io = req.app.get('socketio')
+                io.emit('newAnswer', rfi);
+
+                const notification_options = {
+                    priority: "high",
+                    timeToLive: 60 * 60 * 24
+                };
+
+                if(response[1]!.Id != rfi.User.Id){
+                    const message_notification = {
+                        notification: {
+                            title: "New answer for your request for information",
+                            body: `${response[1]?.FirstName} ${response[1]?.LastName} has approved your report.`,
+                            icon: "https://apiz.aknsmartreport.com/img/assets/Kop.jpg"
                         },
-                        RequestForInformation:{
-                            select:{
-                                CodeReportId: true
-                            }
-                        },
-                        Answer: true,
-                        CreatedDate: true,
-                        Id: true
-                    }
-                }).then(rfi => {
-                    res.status(201).json({message: "Answer created"});
-                    const io = req.app.get('socketio')
-                    io.emit('newAnswer', rfi);
-                }).catch(error => {
-                    throw error;
-                })
-            }, error => {
-                throw error;
-            })
+                        data:{
+                            type:"notification",
+                            url:"https://m.aknsmartreport.com/Project/Feed/" + reportId
+                        }
+                    };
+    
+                    admin.messaging().sendToDevice(response[1]!.Token[0].Token, message_notification, notification_options).then(response => {
+                        console.log(response);
+                    }).catch(error => {
+                        console.log(error.results);
+                    })
+                }
+                
+            });
         } else {
             throw Error("Error fetching reports");
         }
