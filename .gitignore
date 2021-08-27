@@ -1,2 +1,3 @@
 node_modules/
 src/serviceAccount.json
+dist/serviceAccount.json
