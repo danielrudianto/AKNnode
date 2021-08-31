@@ -118,7 +118,12 @@ router.get("/:projectId", (req, res, next) => {
                                 },
                                 take: 1
                             }
-                        }
+                        },
+                    }
+                },
+                where: {
+                    User: {
+                        IsActive: true
                     }
                 }
             },
