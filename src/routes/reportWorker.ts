@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client'
 import * as moment from 'moment';
 import { WorkerReport, Worker } from '../models/codeReport';
+import admin from '../helper/notification.helper';
 
 const prisma = new PrismaClient()
 
@@ -87,6 +88,56 @@ router.post("/", async(req, res, next) => {
                     io.emit('newAttendanceReport', {
                         projectId: workerReport.CodeProjectId,
                         reportId: codeReport!.Id
+                    })
+
+                    prisma.codeProject.findUnique({
+                        where:{
+                            Id: workerReport.CodeProjectId
+                        },
+                        select:{
+                            CodeProjectUser:{
+                                select:{
+                                    User:{
+                                        select:{
+                                            Id: true,
+                                            Token: true,
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }).then(response => {
+                        const tokens:any[] = [];
+                        response?.CodeProjectUser.forEach(x => {
+                            x.User.Token.forEach(userToken => {
+                                if(userToken.UserId != user!.Id){
+                                    tokens.push(userToken.Token);
+                                }
+                            })
+                        })
+
+                        const notification_options = {
+                            priority: "high",
+                            timeToLive: 60 * 60 * 24
+                        };
+
+                        const message_notification = {
+                            notification: {
+                                title: "New worker report",
+                                body: `${user?.FirstName} ${user?.LastName} just created a worker report.`,
+                                icon: "https://apiz.aknsmartreport.com/img/assets/Kop.jpg",
+                            },
+                            data:{
+                                type:"notification",
+                                url:codeReport!.Id.toString()
+                            }
+                        };
+
+                        admin.messaging().sendToDevice(tokens, message_notification, notification_options).then(response => {
+                            console.log(response);
+                        }).catch(error => {
+                            console.log(error);
+                        })
                     })
                 }).catch(error => {
                     throw error;

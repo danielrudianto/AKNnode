@@ -219,6 +219,52 @@ router.post("/", (req, res, next) => {
                             reportId: report.Id
                         });
                     }
+                    prisma.codeProject.findUnique({
+                        where: {
+                            Id: report.CodeProjectId
+                        },
+                        select: {
+                            CodeProjectUser: {
+                                select: {
+                                    User: {
+                                        select: {
+                                            Id: true,
+                                            Token: true,
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }).then(response => {
+                        const tokens = [];
+                        response?.CodeProjectUser.forEach(x => {
+                            x.User.Token.forEach(userToken => {
+                                if (userToken.UserId != user.Id) {
+                                    tokens.push(userToken.Token);
+                                }
+                            });
+                        });
+                        const notification_options = {
+                            priority: "high",
+                            timeToLive: 60 * 60 * 24
+                        };
+                        const message_notification = {
+                            notification: {
+                                title: `New request for information addressed to ${rfi.AddressedFor}`,
+                                body: `${user?.FirstName} ${user?.LastName} just created a request for information about ${rfi.Header}.`,
+                                icon: "https://apiz.aknsmartreport.com/img/assets/Kop.jpg",
+                            },
+                            data: {
+                                type: "notification",
+                                url: rfi.CodeReportId.toString()
+                            }
+                        };
+                        notification_helper_1.default.messaging().sendToDevice(tokens, message_notification, notification_options).then(response => {
+                            console.log(response);
+                        }).catch(error => {
+                            console.log(error);
+                        });
+                    });
                 }).catch(error => {
                     throw error;
                 });
