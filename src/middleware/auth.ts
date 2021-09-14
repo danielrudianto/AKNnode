@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 const prisma = new PrismaClient()
 
 const auth = (req: any, res: any, next: any) => {
-    if(req.headers.authorization == null || req.headers.authorization == ""){
+    if(req.headers.authorization == null || req.headers.authorization == "" || req.headers.authorization == "Bearer null" || req.headers.authorization == "Bearer " || req.headers.authorization == "Bearer"){
         res.sendStatus(401);
     } else {
         const token: string = req.headers.authorization?.toString().split(' ')[1]!;
