@@ -31,7 +31,7 @@ const path = __importStar(require("path"));
 const prisma = new client_1.PrismaClient();
 const router = express_1.Router();
 router.get("/", (req, res, next) => {
-    if (req.headers.authorization == null || req.headers.authorization == "") {
+    if (req.headers.authorization == null || req.headers.authorization == "" || req.headers.authorization == "Bearer null" || req.headers.authorization == "Bearer " || req.headers.authorization == "Bearer") {
         res.sendStatus(401);
     }
     else {

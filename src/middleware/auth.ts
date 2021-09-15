@@ -10,7 +10,7 @@ const auth = (req: any, res: any, next: any) => {
         res.sendStatus(401);
     } else {
         const token: string = req.headers.authorization?.toString().split(' ')[1]!;
-        const decoded: any = jwt.verify(
+        jwt.verify(
             token, 
             fs.readFileSync(path.join(__dirname, "../private.key")), 
             { algorithms: ['RS256'] },

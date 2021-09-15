@@ -30,7 +30,7 @@ const auth = (req, res, next) => {
     }
     else {
         const token = req.headers.authorization?.toString().split(' ')[1];
-        const decoded = jwt.verify(token, fs.readFileSync(path.join(__dirname, "../private.key")), { algorithms: ['RS256'] }, (err, decoded) => {
+        jwt.verify(token, fs.readFileSync(path.join(__dirname, "../private.key")), { algorithms: ['RS256'] }, (err, decoded) => {
             if (err) {
                 return res.status(401).json({ message: "Invalid token" });
             }
