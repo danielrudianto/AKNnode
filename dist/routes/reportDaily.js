@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -8,427 +27,678 @@ const client_1 = require("@prisma/client");
 const pdfmake_1 = __importDefault(require("pdfmake"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const formidable = __importStar(require("formidable"));
+const uuid = __importStar(require("uuid"));
+const sharp_1 = __importDefault(require("sharp"));
 const prisma = new client_1.PrismaClient();
 const router = express_1.Router();
-router.get("/", async (req, res, next) => {
-    const date = new Date(req.query.date.toString());
-    const codeProjectId = parseInt(req.query.projectId.toString());
-    date.setHours(0, 0, 0);
+router.get("/images/:reportId", (req, res, next) => {
+    const reportId = parseInt(req.params.reportId);
+    prisma.dailyReportImage.findMany({
+        where: {
+            CodeReportId: reportId
+        },
+        select: {
+            Id: true,
+            ImageUrl: true,
+            Caption: true
+        }
+    }).then(response => {
+        res.status(200).json(response);
+    }).catch(error => {
+        res.status(500).json({
+            "message": "Error on fetching daily report images."
+        });
+        throw new Error(error);
+    });
+    return res;
+});
+router.get("/:projectId/:date/:month/:year", async (req, res, next) => {
+    const day = parseInt(req.params.date);
+    const month = parseInt(req.params.month);
+    const year = parseInt(req.params.year);
+    const codeProjectId = parseInt(req.params.projectId);
+    const date = new Date(year, month - 1, day);
+    date.setUTCHours(23, 59, 59);
     const dateplus = new Date(date);
     dateplus.setDate(dateplus.getDate() + 1);
-    dateplus.setHours(0, 0, 0);
-    const month = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    prisma.$transaction([
-        prisma.codeReport.findMany({
-            where: {
-                CodeProjectId: codeProjectId,
-                CreatedDate: {
-                    gte: new Date(date),
-                    lt: new Date(dateplus)
-                },
-                IsDelete: false
-            },
-            include: {
-                Material: true,
-                Tool: true,
-                Worker: true,
-                Weather: true,
-                StatusReport: {
+    dateplus.setUTCHours(23, 59, 59);
+    const monthArray = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    prisma.$queryRaw `
+        SELECT * FROM CodeReport
+        WHERE Type = 6
+        AND IsDelete = 0
+        AND CodeProjectId = ${codeProjectId}
+        AND DAY(Date) = ${day}
+        AND MONTH(Date) = ${month}
+        AND YEAR(Date) = ${year}
+    `.then(x => {
+        if (x.length == 0) {
+            res.status(404).json({ "message": "Daily report not created" });
+        }
+        else {
+            prisma.$transaction([
+                prisma.codeReport.findMany({
+                    where: {
+                        CodeProjectId: codeProjectId,
+                        Date: {
+                            gt: date,
+                            lt: dateplus
+                        },
+                        IsDelete: false
+                    },
                     include: {
-                        StatusReportImage: {
-                            select: {
-                                ImageUrl: true
+                        Material: true,
+                        Tool: true,
+                        Worker: true,
+                        Weather: true,
+                        StatusReport: {
+                            include: {
+                                StatusReportImage: {
+                                    select: {
+                                        ImageUrl: true
+                                    }
+                                }
                             }
-                        }
+                        },
+                        DailyReportImage: true,
+                        User: true
                     }
-                },
-                User: true
-            }
-        }),
-        prisma.codeProject.findUnique({
-            where: {
-                Id: codeProjectId
-            }
-        })
-    ]).then(result => {
-        let fonts = {
-            Roboto: {
-                normal: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-Regular.ttf'),
-                bold: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-Medium.ttf'),
-                italics: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-Italic.ttf'),
-                bolditalics: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-MediumItalic.ttf')
-            }
-        };
-        let printer = new pdfmake_1.default(fonts);
-        const toolTableContent = [];
-        toolTableContent.push([
-            {
-                text: "Nama",
-                bold: true,
-                fontSize: 10
-            },
-            {
-                text: "Deskripsi",
-                bold: true,
-                fontSize: 10
-            },
-            {
-                text: "Jumlah",
-                bold: true,
-                fontSize: 10
-            }
-        ]);
-        result[0].filter(x => x.Type == 2).forEach(report => {
-            report.Tool.forEach(tool => {
+                }),
+                prisma.codeProject.findUnique({
+                    where: {
+                        Id: codeProjectId
+                    }
+                })
+            ]).then(result => {
+                let fonts = {
+                    Roboto: {
+                        normal: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-Regular.ttf'),
+                        bold: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-Medium.ttf'),
+                        italics: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-Italic.ttf'),
+                        bolditalics: path_1.default.join(__dirname, '../img/assets/fonts/Roboto-MediumItalic.ttf')
+                    }
+                };
+                let printer = new pdfmake_1.default(fonts);
+                const toolTableContent = [];
                 toolTableContent.push([
                     {
-                        text: tool.Name,
-                        bold: false,
+                        text: "Nama",
+                        bold: true,
                         fontSize: 10
                     },
                     {
-                        text: tool.Description,
-                        bold: false,
+                        text: "Deskripsi",
+                        bold: true,
                         fontSize: 10
                     },
                     {
-                        text: tool.Quantity,
-                        bold: false,
+                        text: "Jumlah",
+                        bold: true,
                         fontSize: 10
                     }
                 ]);
-            });
-        });
-        const workerTableContent = [];
-        workerTableContent.push([
-            {
-                text: "Nama",
-                bold: true,
-                fontSize: 10
-            },
-            {
-                text: "Jumlah",
-                bold: true,
-                fontSize: 10
-            },
-            {
-                text: "Waktu",
-                bold: true,
-                fontSize: 10
-            }
-        ]);
-        result[0].filter(x => x.Type == 1).forEach(report => {
-            report.Worker.forEach(worker => {
+                result[0].filter(x => x.Type == 2).forEach(report => {
+                    report.Tool.forEach(tool => {
+                        toolTableContent.push([
+                            {
+                                text: tool.Name,
+                                bold: false,
+                                fontSize: 10
+                            },
+                            {
+                                text: tool.Description,
+                                bold: false,
+                                fontSize: 10
+                            },
+                            {
+                                text: tool.Quantity,
+                                bold: false,
+                                fontSize: 10
+                            }
+                        ]);
+                    });
+                });
+                const workerTableContent = [];
                 workerTableContent.push([
                     {
-                        text: worker.Name,
-                        bold: false,
+                        text: "Nama",
+                        bold: true,
                         fontSize: 10
                     },
                     {
-                        text: worker.Quantity,
-                        bold: false,
+                        text: "Jumlah",
+                        bold: true,
                         fontSize: 10
                     },
                     {
-                        text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
-                        bold: false,
+                        text: "Waktu",
+                        bold: true,
                         fontSize: 10
                     }
                 ]);
-            });
-        });
-        const content = [];
-        content.push({
-            table: {
-                headerRows: 1,
-                widths: [100, '*'],
-                body: [
-                    [
-                        {
-                            border: [false, false, false, false],
-                            image: path_1.default.join(__dirname, "../img/assets/Kop.jpg"),
-                            width: 100,
-                            height: 100,
-                        },
-                        {
-                            border: [false, false, false, false],
-                            stack: [
-                                { text: "LAPORAN HARIAN LAPANGAN", style: 'header' },
+                result[0].filter(x => x.Type == 1).forEach(report => {
+                    report.Worker.forEach(worker => {
+                        workerTableContent.push([
+                            {
+                                text: worker.Name,
+                                bold: false,
+                                fontSize: 10
+                            },
+                            {
+                                text: worker.Quantity,
+                                bold: false,
+                                fontSize: 10
+                            },
+                            {
+                                text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
+                                bold: false,
+                                fontSize: 10
+                            }
+                        ]);
+                    });
+                });
+                const content = [];
+                content.push({
+                    table: {
+                        headerRows: 1,
+                        widths: [100, '*'],
+                        body: [
+                            [
                                 {
-                                    table: {
-                                        layout: 'noBorders',
-                                        body: [
-                                            [
-                                                {
-                                                    border: [false, false, false, false],
-                                                    text: "Proyek",
-                                                    bold: false,
-                                                    fontSize: 10,
-                                                    fillColor: "#ffffff"
-                                                },
-                                                {
-                                                    border: [false, false, false, false],
-                                                    text: result[1].Name,
-                                                    bold: false,
-                                                    fontSize: 10,
-                                                    fillColor: "#ffffff"
-                                                }
-                                            ],
-                                            [
-                                                {
-                                                    border: [false, false, false, false],
-                                                    text: "Lokasi Proyek",
-                                                    bold: false,
-                                                    fontSize: 10,
-                                                    fillColor: "#ffffff"
-                                                },
-                                                {
-                                                    border: [false, false, false, false],
-                                                    text: result[1].Address,
-                                                    bold: false,
-                                                    fontSize: 10,
-                                                    fillColor: "#ffffff"
-                                                }
-                                            ],
-                                            [
-                                                {
-                                                    border: [false, false, false, false],
-                                                    text: "Hari / Tanggal",
-                                                    bold: false,
-                                                    fontSize: 10,
-                                                    fillColor: "#ffffff",
-                                                },
-                                                {
-                                                    border: [false, false, false, false],
-                                                    text: new Date(date).getDate() + " " + month[new Date(date).getMonth()] + " " + new Date(date).getFullYear(),
-                                                    bold: false,
-                                                    fontSize: 10,
-                                                    fillColor: "#ffffff"
-                                                }
-                                            ]
-                                        ]
-                                    },
+                                    border: [false, false, false, false],
+                                    image: path_1.default.join(__dirname, "../img/assets/Kop.jpg"),
+                                    width: 100,
+                                    height: 100,
+                                },
+                                {
+                                    border: [false, false, false, false],
+                                    stack: [
+                                        { text: "LAPORAN HARIAN LAPANGAN", style: 'header' },
+                                        {
+                                            table: {
+                                                layout: 'noBorders',
+                                                body: [
+                                                    [
+                                                        {
+                                                            border: [false, false, false, false],
+                                                            text: "Proyek",
+                                                            bold: false,
+                                                            fontSize: 10,
+                                                            fillColor: "#ffffff"
+                                                        },
+                                                        {
+                                                            border: [false, false, false, false],
+                                                            text: result[1].Name,
+                                                            bold: false,
+                                                            fontSize: 10,
+                                                            fillColor: "#ffffff"
+                                                        }
+                                                    ],
+                                                    [
+                                                        {
+                                                            border: [false, false, false, false],
+                                                            text: "Lokasi Proyek",
+                                                            bold: false,
+                                                            fontSize: 10,
+                                                            fillColor: "#ffffff"
+                                                        },
+                                                        {
+                                                            border: [false, false, false, false],
+                                                            text: result[1].Address,
+                                                            bold: false,
+                                                            fontSize: 10,
+                                                            fillColor: "#ffffff"
+                                                        }
+                                                    ],
+                                                    [
+                                                        {
+                                                            border: [false, false, false, false],
+                                                            text: "Hari / Tanggal",
+                                                            bold: false,
+                                                            fontSize: 10,
+                                                            fillColor: "#ffffff",
+                                                        },
+                                                        {
+                                                            border: [false, false, false, false],
+                                                            text: day + " " + monthArray[month - 1] + " " + year,
+                                                            bold: false,
+                                                            fontSize: 10,
+                                                            fillColor: "#ffffff"
+                                                        }
+                                                    ]
+                                                ]
+                                            },
+                                        }
+                                    ]
                                 }
                             ]
+                        ],
+                        layout: {
+                            hLineWidth: function (i, node) {
+                                return (i !== node.table.body.length) ? 0 : 2;
+                            },
+                            hLineStyle: (i, node) => {
+                                if (i != node.table.body.length) {
+                                    return null;
+                                }
+                                return { dash: { length: 10, space: 4 } };
+                            },
                         }
-                    ]
-                ],
-                layout: {
-                    hLineWidth: function (i, node) {
-                        return (i !== node.table.body.length) ? 0 : 2;
-                    },
-                    hLineStyle: (i, node) => {
-                        if (i != node.table.body.length) {
-                            return null;
+                    }
+                });
+                content.push({
+                    text: "A. Peralatan",
+                    fontSize: 11,
+                    margin: [0, 10, 0, 0],
+                    bold: true
+                });
+                if (toolTableContent.length > 1) {
+                    content.push({
+                        layout: 'lightHorizontalLines',
+                        table: {
+                            headerRows: 1,
+                            widths: [200, '*', 100],
+                            body: toolTableContent,
+                            margin: [0, 10, 0, 10]
                         }
-                        return { dash: { length: 10, space: 4 } };
-                    },
+                    });
                 }
-            }
-        });
-        content.push({
-            text: "A. Peralatan",
-            fontSize: 11,
-            margin: [0, 10, 0, 0],
-            bold: true
-        });
-        if (toolTableContent.length > 1) {
-            content.push({
-                layout: 'lightHorizontalLines',
-                table: {
-                    headerRows: 1,
-                    widths: [200, '*', 100],
-                    body: toolTableContent,
-                    margin: [0, 10, 0, 10]
+                else {
+                    content.push({
+                        text: "Tidak ada laporan peralatan.",
+                        fontSize: 10,
+                        margin: [0, 10, 0, 10],
+                        bold: false
+                    });
                 }
-            });
-        }
-        else {
-            content.push({
-                text: "Tidak ada laporan peralatan.",
-                fontSize: 10,
-                margin: [0, 10, 0, 10],
-                bold: false
-            });
-        }
-        content.push({
-            text: "B. Pekerja",
-            fontSize: 11,
-            margin: [0, 10, 0, 0],
-            bold: true
-        });
-        if (workerTableContent.length > 1) {
-            content.push({
-                layout: 'lightHorizontalLines',
-                table: {
-                    headerRows: 1,
-                    widths: [200, '*', 100],
-                    body: workerTableContent,
-                    margin: [0, 10, 0, 10]
+                content.push({
+                    text: "B. Pekerja",
+                    fontSize: 11,
+                    margin: [0, 10, 0, 0],
+                    bold: true
+                });
+                if (workerTableContent.length > 1) {
+                    content.push({
+                        layout: 'lightHorizontalLines',
+                        table: {
+                            headerRows: 1,
+                            widths: [200, '*', 100],
+                            body: workerTableContent,
+                            margin: [0, 10, 0, 10]
+                        }
+                    });
                 }
-            });
-        }
-        else {
-            content.push({
-                text: "Tidak ada laporan pekerja.",
-                bold: false,
-                fontSize: 10,
-                margin: [0, 10, 0, 10]
-            });
-        }
-        content.push({
-            text: "C. Cuaca",
-            fontSize: 11,
-            margin: [0, 10, 0, 0],
-            bold: true
-        });
-        const weatherTableContent = [];
-        weatherTableContent.push([
-            {
-                text: "Cuaca",
-                bold: true,
-                fontSize: 10
-            },
-            {
-                text: "Waktu",
-                bold: true,
-                fontSize: 10
-            }
-        ]);
-        result[0].filter(x => x.Type == 4).forEach(report => {
-            const weather = report.Weather?.WeatherId;
-            if (weather == 1) {
+                else {
+                    content.push({
+                        text: "Tidak ada laporan pekerja.",
+                        bold: false,
+                        fontSize: 10,
+                        margin: [0, 10, 0, 10]
+                    });
+                }
+                content.push({
+                    text: "C. Cuaca",
+                    fontSize: 11,
+                    margin: [0, 10, 0, 0],
+                    bold: true
+                });
+                const weatherTableContent = [];
                 weatherTableContent.push([
                     {
-                        text: "Cuaca cerah",
-                        bold: false,
+                        text: "Cuaca",
+                        bold: true,
                         fontSize: 10
                     },
                     {
-                        text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
-                        bold: false,
+                        text: "Waktu",
+                        bold: true,
                         fontSize: 10
                     }
                 ]);
-            }
-            else {
-                weatherTableContent.push([
-                    {
-                        text: "Cuaca hujan",
-                        bold: false,
-                        fontSize: 10
-                    },
-                    {
-                        text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
-                        bold: false,
-                        fontSize: 10
+                result[0].filter(x => x.Type == 4).forEach(report => {
+                    const weather = report.Weather?.WeatherId;
+                    if (weather == 1) {
+                        weatherTableContent.push([
+                            {
+                                text: "Cuaca cerah",
+                                bold: false,
+                                fontSize: 10
+                            },
+                            {
+                                text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
+                                bold: false,
+                                fontSize: 10
+                            }
+                        ]);
                     }
-                ]);
-            }
-        });
-        if (weatherTableContent.length > 1) {
-            content.push({
-                layout: 'lightHorizontalLines',
-                table: {
-                    headerRows: 1,
-                    widths: ["*", 100],
-                    body: weatherTableContent,
-                    margin: [0, 10, 0, 10]
+                    else {
+                        weatherTableContent.push([
+                            {
+                                text: "Cuaca hujan",
+                                bold: false,
+                                fontSize: 10
+                            },
+                            {
+                                text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
+                                bold: false,
+                                fontSize: 10
+                            }
+                        ]);
+                    }
+                });
+                if (weatherTableContent.length > 1) {
+                    content.push({
+                        layout: 'lightHorizontalLines',
+                        table: {
+                            headerRows: 1,
+                            widths: ["*", 100],
+                            body: weatherTableContent,
+                            margin: [0, 10, 0, 10]
+                        }
+                    });
                 }
+                else {
+                    content.push({
+                        text: "Tidak ada laporan cuaca.",
+                        bold: false,
+                        fontSize: 10,
+                        margin: [0, 10, 0, 10]
+                    });
+                }
+                content.push({
+                    text: "D. Laporan Dokumentasi",
+                    fontSize: 11,
+                    margin: [0, 10, 0, 0],
+                    bold: true
+                });
+                const dailyReportTable = [];
+                const images = [];
+                result[0].filter(x => x.Type == 6).forEach(report => {
+                    report.DailyReportImage.forEach(dailyReport => {
+                        images.push({
+                            image: path_1.default.join(__dirname, '../img/' + dailyReport.ImageUrl),
+                            width: 150,
+                            margin: [0, 10, 0, 10],
+                            text: dailyReport.Caption
+                        });
+                    });
+                });
+                let columns = [];
+                images.forEach((item, index) => {
+                    let stack = [{
+                            stack: [{
+                                    image: item.image,
+                                    width: 150,
+                                },
+                                item.text
+                            ]
+                        }];
+                    if (index % 2 == 0) {
+                        columns = [stack];
+                    }
+                    else {
+                        columns.push(stack);
+                    }
+                    if (index % 2 != 0 || index == (images.length - 1)) {
+                        dailyReportTable.push({ columns: columns });
+                        columns = [];
+                    }
+                });
+                if (images.length > 0) {
+                    content.push(dailyReportTable);
+                }
+                else {
+                    content.push({
+                        text: "Tidak ada dokumentasi terlampir.",
+                        bold: false,
+                        fontSize: 10,
+                        margin: [0, 10, 0, 10]
+                    });
+                }
+                var docDefinition = {
+                    content: content,
+                    styles: {
+                        header: {
+                            fontSize: 22,
+                            bold: true
+                        },
+                        defaultStyle: {
+                            fontSize: 10,
+                            bold: false
+                        }
+                    }
+                };
+                let doc = printer.createPdfKitDocument(docDefinition);
+                doc.pipe(fs_1.default.createWriteStream('output.pdf'));
+                doc.end();
+                res.setHeader('Content-type', 'application/pdf');
+                res.setHeader('Content-disposition', 'inline; filename="DailyReport.pdf"');
+                doc.pipe(res);
+            }).catch(error => {
+                throw error;
             });
+        }
+    });
+});
+router.get("/check/:projectId/:date/:month/:year", async (req, res, next) => {
+    const projectId = parseInt(req.params.projectId);
+    const date = parseInt(req.params.date);
+    const month = parseInt(req.params.month);
+    const year = parseInt(req.params.year);
+    prisma.$queryRaw `
+        SELECT id 
+        FROM codeReport 
+        WHERE CodeProjectId = ${projectId} 
+        AND DAY(CreatedDate) = ${date} 
+        AND MONTH(CreatedDate) = ${month} 
+        AND YEAR(CreatedDate) = ${year} 
+        AND IsDelete = 0 
+        AND Type = 6`
+        .then(result => {
+        if (result.length > 0) {
+            res.status(500).json({ "message": "Dailiy report already created" });
         }
         else {
-            content.push({
-                text: "Tidak ada laporan cuaca.",
-                bold: false,
-                fontSize: 10,
-                margin: [0, 10, 0, 10]
-            });
+            res.status(200).json({ "message": "Daily report has not been created" });
         }
-        content.push({
-            text: "D. Laporan Perkembangan",
-            fontSize: 11,
-            margin: [0, 10, 0, 0],
-            bold: true
-        });
-        let progressReportCount = 0;
-        const progressReportTable = [];
-        result[0].filter(x => x.Type == 7).forEach(report => {
-            const stack = [
-                {
-                    text: report.User.FirstName + " " + report.User.LastName,
-                    fontSize: 10,
-                    bold: true,
-                    margin: [0, 10, 0, 10]
-                },
-                {
-                    text: report.CreatedDate.getHours() + ":" + report.CreatedDate.getMinutes(),
-                    fontSize: 8,
-                    bold: false
-                },
-                {
-                    text: report.StatusReport?.Status,
-                    fontSize: 10,
-                    bold: false
+    }).catch(e => {
+        throw new Error("Dailiy report already created");
+    });
+    return res;
+});
+router.get("/getImages/:projectId/:date/:month/:year", async (req, res, next) => {
+    const projectId = parseInt(req.params.projectId);
+    const date = parseInt(req.params.date);
+    const month = parseInt(req.params.month);
+    const year = parseInt(req.params.year);
+    prisma.$queryRaw `
+        SELECT statusReportImage.ImageUrl, statusReportImage.Name, statusReport.Status 
+        FROM statusReportImage 
+        JOIN statusReport ON statusReportImage.StatusReportId = statusReport.Id 
+        JOIN codeReport ON statusReport.CodeReportId = codeReport.Id
+        WHERE codeReport.CodeProjectId = ${projectId} 
+        AND DAY(codeReport.CreatedDate) = ${date} 
+        AND MONTH(codeReport.CreatedDate) = ${month} 
+        AND YEAR(codeReport.CreatedDate) = ${year} 
+        AND IsDelete = 0 
+        AND Type = 7`.then(result => {
+        console.log(result);
+        res.status(200).json(result);
+    }).catch(e => {
+        throw new Error(e.message);
+    });
+    return res;
+});
+router.post("/:projectId/:date/:month/:year", (req, res, next) => {
+    const projectId = parseInt(req.params.projectId);
+    const form = new formidable.IncomingForm({
+        uploadDir: path_1.default.join(__dirname, "../tmp")
+    });
+    const date = parseInt(req.params.date);
+    const month = parseInt(req.params.month);
+    const year = parseInt(req.params.year);
+    form.parse(req, function (err, fields, files) {
+        const fileLength = parseInt(fields.Files.toString());
+        const createdBy = fields.CreatedBy.toString();
+        prisma.user.findUnique({
+            where: {
+                Email: createdBy
+            }
+        }).then(user => {
+            prisma.codeReport.create({
+                data: {
+                    CodeProjectId: projectId,
+                    CreatedBy: user.Id,
+                    CreatedDate: new Date(),
+                    Date: new Date(Date.UTC(year, (month - 1), date, 0, 0, 0, 0)),
+                    Type: 6,
+                    Note: ""
                 }
-            ];
-            const images = [];
-            report.StatusReport?.StatusReportImage.forEach(image => {
-                images.push({
-                    image: path_1.default.join(__dirname, '../img/' + image.ImageUrl),
-                    width: 150,
-                    margin: [0, 10, 0, 10]
+            }).then(report => {
+                if (fileLength > 0) {
+                    let i = 0;
+                    while (i < fileLength) {
+                        const file = files["File[" + i + "]"];
+                        const caption = (fields["Caption[" + i + "]"]).toString();
+                        const fileNameArray = file.name.split(".");
+                        const ext = fileNameArray[fileNameArray.length - 1];
+                        const uid = uuid.v1();
+                        sharp_1.default(file.path).resize({
+                            fit: sharp_1.default.fit.contain,
+                            width: 640
+                        }).toFile(path_1.default.join(__dirname, "../img/daily/", (uid + "." + ext))).then(() => {
+                            prisma.dailyReportImage.create({
+                                data: {
+                                    CodeReportId: report.Id,
+                                    ImageUrl: "daily/" + uid + "." + ext,
+                                    Caption: caption
+                                }
+                            }).then(() => {
+                            }).catch(error => {
+                                console.log(error);
+                                return false;
+                            });
+                        });
+                        if (i == (fileLength - 1)) {
+                            res.status(200).json({ message: "Daily Report created" });
+                            const io = req.app.get('socketio');
+                            io.emit('newDailyReport', {
+                                projectId: projectId,
+                                reportId: report.Id
+                            });
+                        }
+                        i++;
+                    }
+                }
+                else {
+                    res.status(200).json({ message: "Daily Report created" });
+                    const io = req.app.get('socketio');
+                    io.emit('newDailyReport', {
+                        projectId: projectId,
+                        reportId: report.Id
+                    });
+                }
+            });
+        }).catch(error => {
+            res.status(500).json({ "message": "Invalid user" });
+        });
+    });
+});
+router.put("/:reportId", (req, res, next) => {
+    let projectId = 0;
+    const reportId = parseInt(req.params.reportId);
+    const form = new formidable.IncomingForm({
+        uploadDir: path_1.default.join(__dirname, "../tmp")
+    });
+    prisma.codeReport.findUnique({
+        where: {
+            Id: reportId
+        }
+    }).then(x => {
+        projectId = x.CodeProjectId;
+    });
+    form.parse(req, function (err, fields, files) {
+        const fileLength = parseInt(fields.Files.toString());
+        const removeIds = JSON.parse(fields.remove.toString());
+        if (removeIds.length > 0) {
+            prisma.$transaction([
+                prisma.dailyReportImage.findMany({
+                    where: {
+                        Id: {
+                            in: removeIds
+                        }
+                    }
+                }),
+                prisma.dailyReportImage.deleteMany({
+                    where: {
+                        Id: {
+                            in: removeIds
+                        }
+                    }
+                })
+            ]).then(response => {
+                response[0].forEach(image => {
+                    fs_1.default.unlinkSync(path_1.default.join(__dirname, "../img/", image.ImageUrl));
                 });
             });
-            progressReportTable.push({
-                columns: [
-                    {
-                        width: 150,
-                        stack: images
+        }
+        prisma.dailyReportImage.findMany({
+            where: {
+                CodeReportId: reportId
+            }
+        }).then(dailyReportImages => {
+            dailyReportImages.forEach(dailyReportImage => {
+                prisma.dailyReportImage.update({
+                    where: {
+                        Id: dailyReportImage.Id
                     },
-                    {
-                        width: "*",
-                        stack: stack
+                    data: {
+                        Caption: fields[`EditCaption[${dailyReportImage.Id}]`].toString()
                     }
-                ],
-                columnGap: 10
+                });
             });
-            progressReportCount++;
         });
-        if (progressReportCount > 0) {
-            content.push(progressReportTable);
+        if (fileLength == 0) {
+            res.status(200).json({ message: "Daily Report edited" });
         }
         else {
-            content.push({
-                text: "Tidak ada laporan perkembangan.",
-                bold: false,
-                fontSize: 10,
-                margin: [0, 10, 0, 10]
-            });
-        }
-        var docDefinition = {
-            content: content,
-            styles: {
-                header: {
-                    fontSize: 22,
-                    bold: true
-                },
-                defaultStyle: {
-                    fontSize: 10,
-                    bold: false
+            let i = 0;
+            while (i < fileLength) {
+                const file = files["File[" + i + "]"];
+                const caption = (fields["Caption[" + i + "]"]).toString();
+                const fileNameArray = file.name.split(".");
+                const ext = fileNameArray[fileNameArray.length - 1];
+                const uid = uuid.v1();
+                sharp_1.default(file.path).resize({
+                    fit: sharp_1.default.fit.contain,
+                    width: 640
+                }).toFile(path_1.default.join(__dirname, "../img/daily/", (uid + "." + ext))).then(() => {
+                    prisma.dailyReportImage.create({
+                        data: {
+                            CodeReportId: reportId,
+                            ImageUrl: "daily/" + uid + "." + ext,
+                            Caption: caption
+                        }
+                    }).then(() => {
+                    }).catch(error => {
+                        res.status(500).json({ "message": "Edit daily report error" });
+                        throw new Error(error);
+                    });
+                });
+                if (i == (fileLength - 1)) {
+                    res.status(200).json({ message: "Daily Report edited" });
+                    const io = req.app.get('socketio');
+                    io.emit('editDailyReport', {
+                        projectId: projectId,
+                        reportId: reportId
+                    });
                 }
+                i++;
             }
-        };
-        let doc = printer.createPdfKitDocument(docDefinition);
-        doc.pipe(fs_1.default.createWriteStream('output.pdf'));
-        doc.end();
-        res.setHeader('Content-type', 'application/pdf');
-        res.setHeader('Content-disposition', 'inline; filename="DailyReport.pdf"');
-        doc.pipe(res);
-    }).catch(error => {
-        throw error;
+        }
     });
+    return res;
 });
 exports.default = router;
 //# sourceMappingURL=reportDaily.js.map

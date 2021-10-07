@@ -277,6 +277,12 @@ router.get("/:projectId", (req, res, next) => {
                     WeatherId: true,
                 }
             },
+            DailyReportImage: {
+                select: {
+                    ImageUrl: true,
+                    Caption: true
+                }
+            },
             RequestForInformation: {
                 include: {
                     RequestForInformationDocument: true,
@@ -499,6 +505,11 @@ router.get("/", (req, res, next) => {
                 where: {
                     Approval: 0,
                     IsDelete: false
+                }
+            },
+            CodeProject: {
+                select: {
+                    Name: true
                 }
             }
         }

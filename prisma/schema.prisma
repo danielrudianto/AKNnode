@@ -134,7 +134,6 @@ model dailyReportImage {
   Id           Int    @id @default(autoincrement())
   CodeReportId Int
   ImageUrl     String
-  Name         String
   Caption      String
 
   CodeReport codeReport @relation(fields: [CodeReportId], references: [Id])

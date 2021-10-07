@@ -187,11 +187,14 @@ router.post("/", async(req, res, next) => {
                             
                             if(i == (fileLength - 1)){
                                 res.status(200).json({message: "Status report created"});
-                                const io = req.app.get('socketio')
-                                io.emit('newProgressReport', {
-                                    projectId: report.CodeProjectId,
-                                    reportId: report!.Id
-                                })
+                                const io = req.app.get('socketio');
+                                setTimeout(function(){
+                                    io.emit('newProgressReport', {
+                                        projectId: report.CodeProjectId,
+                                        reportId: report!.Id
+                                    })
+                                }, 500)
+                                
                             }
 
                             i++;

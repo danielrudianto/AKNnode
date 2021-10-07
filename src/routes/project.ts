@@ -12,7 +12,10 @@ const router = Router();
 router.get("/", async(req, res, next) => {
     const email = req.query.email;
     prisma.codeProject.findMany({
-        include:{
+        select:{
+            Name: true,
+            Id: true,
+            Address: true,
             Client:{
                 select:{
                     Name: true,

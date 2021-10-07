@@ -182,7 +182,6 @@ router.post("/", (req, res, next) => {
                             const fileNameArray = file.name.split(".");
                             const ext = fileNameArray[fileNameArray.length - 1];
                             const uid = uuid.v1();
-                            const newpath = path.join(__dirname, "../img/rfi/", (uid + "." + ext));
                             sharp_1.default(oldpath).resize({
                                 fit: sharp_1.default.fit.cover,
                                 width: 640,
