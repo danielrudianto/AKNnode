@@ -125,9 +125,9 @@ model codeReportApproval {
   Approval     Int
   IsDelete     Boolean  @default(false)
 
-  CodeReport        codeReport @relation("codeReportApproval", fields: [CodeReportId], references: [Id])
-  CodeReportComment codeReport @relation("codeReportApprovalComment", fields: [CodeReportId], references: [Id])
-  User              user       @relation(fields: [CreatedBy], references: [Id])
+  CodeReport        codeReport @relation("codeReportApproval", fields: [CodeReportId], references: [Id], map: "CodeReportApproval")
+  CodeReportComment codeReport @relation("codeReportApprovalComment", fields: [CodeReportId], references: [Id], map: "CodeReportApprovalComment")
+    User              user       @relation(fields: [CreatedBy], references: [Id])
 }
 
 model dailyReportImage {
