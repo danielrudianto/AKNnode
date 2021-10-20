@@ -79,6 +79,7 @@ router.get("/", (req, res, next) => {
 });
 router.post("/register", async (req, res, next) => {
     const body = req.body;
+    console.log(body);
     prisma.user.update({
         where: {
             Email: body.Email
