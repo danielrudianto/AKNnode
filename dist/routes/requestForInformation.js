@@ -187,7 +187,7 @@ router.post("/", (req, res, next) => {
                                 width: 640,
                                 height: undefined,
                             })
-                                .toFile(path.join(__dirname, "../img/status/", (uid + "." + ext)))
+                                .toFile(path.join(__dirname, "../img/rfi/", (uid + "." + ext)))
                                 .then(() => {
                                 prisma.requestForInformationDocument.create({
                                     data: {

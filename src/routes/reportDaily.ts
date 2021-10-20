@@ -6,7 +6,6 @@ import path from 'path';
 import * as formidable from 'formidable';
 import * as uuid from 'uuid';
 import sharp from 'sharp';
-import { image } from 'pdfkit';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -58,7 +57,7 @@ router.get("/:projectId/:date/:month/:year", async(req, res, next) => {
         AND MONTH(Date) = ${month}
         AND YEAR(Date) = ${year}
     `.then(x => {
-        if(x.length == 0){
+        if((x as any[]).length == 0){
             res.status(404).json({"message": "Daily report not created"});
         } else {
             prisma.$transaction([
@@ -503,7 +502,7 @@ router.get("/check/:projectId/:date/:month/:year", async(req, res, next) => {
         AND IsDelete = 0 
         AND Type = 6`
     .then(result => {
-        if(result.length > 0){
+        if((result as any[]).length > 0){
             res.status(500).json({"message": "Dailiy report already created"});
         } else {
             res.status(200).json({"message": "Daily report has not been created"});

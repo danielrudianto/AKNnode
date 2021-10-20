@@ -104,6 +104,7 @@ router.post("/register", async (req, res, next) => {
             }
         }
     }).then(user => {
+        console.log(user);
         let token = jwt.sign({
             FirstName: user?.FirstName,
             LastName: user?.LastName,
