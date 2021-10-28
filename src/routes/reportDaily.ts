@@ -588,7 +588,7 @@ router.post("/:projectId/:date/:month/:year", (req, res, next) => {
                                 data:{
                                     CodeReportId: report.Id,
                                     ImageUrl:"daily/" + uid + "." + ext,
-                                    Caption: caption
+                                    Caption: caption,
                                 }
                             }).then(() => {
                             }).catch(error => {

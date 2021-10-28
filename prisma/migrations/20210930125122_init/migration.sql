@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE `dailyreportimage` DROP COLUMN `Name`;
+ALTER TABLE `dailyReportImage` DROP COLUMN `Name`;
