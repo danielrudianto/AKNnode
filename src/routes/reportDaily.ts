@@ -41,10 +41,10 @@ router.get("/:projectId/:date/:month/:year", async(req, res, next) => {
     const codeProjectId = parseInt(req.params.projectId);
 
     const date = new Date(year, month - 1, day);
-    date.setHours(0, 0, 1);
+    date.setUTCHours(0, 0, 1);
 
     const dateplus = new Date(date);
-    dateplus.setHours(23, 59, 59);
+    dateplus.setUTCHours(23, 59, 59);
 
     const monthArray = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     prisma.$queryRaw`
@@ -64,8 +64,8 @@ router.get("/:projectId/:date/:month/:year", async(req, res, next) => {
                 prisma.codeReport.findMany({
                     where:{
                         CodeProjectId: codeProjectId,
-                        Date: {
-                            gt: date,
+                        Date:{
+                            gte: date,
                             lt: dateplus
                         },
                         IsDelete: false
