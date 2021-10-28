@@ -413,6 +413,7 @@ router.get("/:projectId/:date/:month/:year", async(req, res, next) => {
                 const images: any[] = [];
                 result[0].filter(x => x.Type == 6).forEach(report => {
                     report.DailyReportImage.forEach(dailyReport => {
+                        console.log(dailyReport);
                         images.push({
                             image: path.join(__dirname, '../img/' + dailyReport.ImageUrl),
                             width: 150,

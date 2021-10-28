@@ -417,6 +417,7 @@ router.get("/:projectId/:date/:month/:year", async (req, res, next) => {
                 const images = [];
                 result[0].filter(x => x.Type == 6).forEach(report => {
                     report.DailyReportImage.forEach(dailyReport => {
+                        console.log(dailyReport);
                         images.push({
                             image: path_1.default.join(__dirname, '../img/' + dailyReport.ImageUrl),
                             width: 150,
@@ -573,7 +574,7 @@ router.post("/:projectId/:date/:month/:year", (req, res, next) => {
                                 data: {
                                     CodeReportId: report.Id,
                                     ImageUrl: "daily/" + uid + "." + ext,
-                                    Caption: caption
+                                    Caption: caption,
                                 }
                             }).then(() => {
                             }).catch(error => {
