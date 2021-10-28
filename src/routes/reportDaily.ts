@@ -49,7 +49,8 @@ router.get("/:projectId/:date/:month/:year", async(req, res, next) => {
 
     const monthArray = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     prisma.$queryRaw`
-        SELECT * FROM CodeReport
+        SELECT * 
+        FROM codeReport
         WHERE Type = 6
         AND IsDelete = 0
         AND CodeProjectId = ${codeProjectId}
